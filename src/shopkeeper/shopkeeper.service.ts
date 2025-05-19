@@ -1,11 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, RequestTimeoutException } from '@nestjs/common';
 import { CreateShopkeeperDto } from './dto/create-shopkeeper.dto';
 import { UpdateShopkeeperDto } from './dto/update-shopkeeper.dto';
+import { Repository } from 'typeorm';
+import { Shopkeeper } from './entities/shopkeeper.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ShopkeeperService {
-  create(createShopkeeperDto: CreateShopkeeperDto) {
-    return 'This action adds a new shopkeeper';
+  constructor(
+    @InjectRepository(Shopkeeper)
+    private readonly shopkeeperRepository: Repository<Shopkeeper>,
+  ) {}
+  async create(createShopkeeperDto: CreateShopkeeperDto) {
+    try {
+      const newShopkeeper =
+        this.shopkeeperRepository.create(createShopkeeperDto);
+      return await this.shopkeeperRepository.save(newShopkeeper);
+    } catch (error) {
+      throw new RequestTimeoutException(error);
+    }
   }
 
   findAll() {
