@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Shopkeeper } from './entities/shopkeeper.entity';
 import { CreateShopkeeperProvider } from './providers/create-shopkeeper.provider';
 import { AuthModule } from '../auth/auth.module';
+import { PaginationModule } from '../common/pagination/pagination.module';
 
 @Module({
   controllers: [ShopkeeperController],
@@ -12,6 +13,7 @@ import { AuthModule } from '../auth/auth.module';
   imports: [
     TypeOrmModule.forFeature([Shopkeeper]),
     forwardRef(() => AuthModule),
+    PaginationModule,
   ],
   exports: [CreateShopkeeperProvider],
 })

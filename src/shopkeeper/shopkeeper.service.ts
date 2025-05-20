@@ -9,6 +9,8 @@ import { Repository } from 'typeorm';
 import { Shopkeeper } from './entities/shopkeeper.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateShopkeeperProvider } from './providers/create-shopkeeper.provider';
+import { PaginationProvider } from '../common/pagination/providers/pagination.provider';
+import { GetShopkeeperDto } from './dto/get-shopkeeper.dto';
 
 @Injectable()
 export class ShopkeeperService {
@@ -16,13 +18,17 @@ export class ShopkeeperService {
     @InjectRepository(Shopkeeper)
     private readonly shopkeeperRepository: Repository<Shopkeeper>,
     private readonly createShopkeeperProvider: CreateShopkeeperProvider,
+    private readonly paginationProvider: PaginationProvider,
   ) {}
   async create(createShopkeeperDto: CreateShopkeeperDto) {
     return await this.createShopkeeperProvider.create(createShopkeeperDto);
   }
 
-  findAll() {
-    return `This action returns all shopkeeper`;
+  async findAll(getShopkeeperDto: GetShopkeeperDto) {
+    return await this.paginationProvider.paginateQuery(
+      { limit: getShopkeeperDto.limit, page: getShopkeeperDto.page },
+      this.shopkeeperRepository,
+    );
   }
 
   findOne(id: number) {

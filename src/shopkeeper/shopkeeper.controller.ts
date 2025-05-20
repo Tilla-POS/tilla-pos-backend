@@ -6,10 +6,14 @@ import {
   Param,
   Delete,
   Put,
+  Query,
+  ClassSerializerInterceptor,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ShopkeeperService } from './shopkeeper.service';
 import { CreateShopkeeperDto } from './dto/create-shopkeeper.dto';
 import { UpdateShopkeeperDto } from './dto/update-shopkeeper.dto';
+import { GetShopkeeperDto } from './dto/get-shopkeeper.dto';
 
 @Controller('shopkeeper')
 export class ShopkeeperController {
@@ -21,8 +25,9 @@ export class ShopkeeperController {
   }
 
   @Get()
-  findAll() {
-    return this.shopkeeperService.findAll();
+  @UseInterceptors(ClassSerializerInterceptor)
+  findAll(@Query() getShopkeeperDto: GetShopkeeperDto) {
+    return this.shopkeeperService.findAll(getShopkeeperDto);
   }
 
   @Get(':id')

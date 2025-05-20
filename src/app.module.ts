@@ -9,6 +9,9 @@ import databaseConfig from './config/database.config';
 import environmentValidation from './config/environment.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { DataResponseInterceptor } from './common/interceptors/data-response/data-response.interceptor';
+import { PaginationModule } from './common/pagination/pagination.module';
 
 const ENV = process.env.NODE_ENV;
 
@@ -16,6 +19,8 @@ const ENV = process.env.NODE_ENV;
   imports: [
     AdminModule,
     ShopkeeperModule,
+    AuthModule,
+    PaginationModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV ? '.env.development' : `.env.${ENV}`,
@@ -38,9 +43,11 @@ const ENV = process.env.NODE_ENV;
         database: configService.get<string>('database.name'),
       }),
     }),
-    AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_INTERCEPTOR, useClass: DataResponseInterceptor },
+  ],
 })
 export class AppModule {}

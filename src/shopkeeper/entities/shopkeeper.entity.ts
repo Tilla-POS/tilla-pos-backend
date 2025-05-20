@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class Shopkeeper {
@@ -18,6 +19,7 @@ export class Shopkeeper {
   @Column({ nullable: false, type: 'varchar', length: 96, unique: true })
   phone: string;
   @Column({ nullable: false, type: 'varchar', length: 96 })
+  @Exclude()
   password: string;
   @CreateDateColumn()
   createdAt: Date;
