@@ -6,15 +6,20 @@ import { Shopkeeper } from './entities/shopkeeper.entity';
 import { CreateShopkeeperProvider } from './providers/create-shopkeeper.provider';
 import { AuthModule } from '../auth/auth.module';
 import { PaginationModule } from '../common/pagination/pagination.module';
+import { FindShopkeeperByProvider } from './providers/find-shopkeeper-by.provider';
 
 @Module({
   controllers: [ShopkeeperController],
-  providers: [ShopkeeperService, CreateShopkeeperProvider],
+  providers: [
+    ShopkeeperService,
+    CreateShopkeeperProvider,
+    FindShopkeeperByProvider,
+  ],
   imports: [
     TypeOrmModule.forFeature([Shopkeeper]),
     forwardRef(() => AuthModule),
     PaginationModule,
   ],
-  exports: [CreateShopkeeperProvider],
+  exports: [CreateShopkeeperProvider, FindShopkeeperByProvider],
 })
 export class ShopkeeperModule {}

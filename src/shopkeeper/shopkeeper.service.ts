@@ -28,6 +28,9 @@ export class ShopkeeperService {
     return await this.paginationProvider.paginateQuery(
       { limit: getShopkeeperDto.limit, page: getShopkeeperDto.page },
       this.shopkeeperRepository,
+      {
+        relations: { businesses: true },
+      },
     );
   }
 
@@ -48,9 +51,9 @@ export class ShopkeeperService {
       throw new BadRequestException('Shopkeeper not found');
     }
     // update the shopkeeper
-    shopkeeper.username = updateShopkeeperDto.username;
-    shopkeeper.email = updateShopkeeperDto.email;
-    shopkeeper.phone = updateShopkeeperDto.phone;
+    shopkeeper.username = updateShopkeeperDto.username || shopkeeper.username;
+    shopkeeper.email = updateShopkeeperDto.email || shopkeeper.email;
+    shopkeeper.phone = updateShopkeeperDto.phone || shopkeeper.phone;
     try {
       await this.shopkeeperRepository.save(shopkeeper);
     } catch (error) {

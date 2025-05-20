@@ -12,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { DataResponseInterceptor } from './common/interceptors/data-response/data-response.interceptor';
 import { PaginationModule } from './common/pagination/pagination.module';
+import { BusinessModule } from './business/business.module';
 
 const ENV = process.env.NODE_ENV;
 
@@ -43,6 +44,7 @@ const ENV = process.env.NODE_ENV;
         database: configService.get<string>('database.name'),
       }),
     }),
+    BusinessModule,
   ],
   controllers: [AppController],
   providers: [

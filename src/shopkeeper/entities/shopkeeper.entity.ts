@@ -3,10 +3,12 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { Business } from '../../business/entities/business.entity';
 
 @Entity()
 export class Shopkeeper {
@@ -21,6 +23,8 @@ export class Shopkeeper {
   @Column({ nullable: false, type: 'varchar', length: 96 })
   @Exclude()
   password: string;
+  @OneToMany(() => Business, (business) => business.shopkeeper)
+  businesses: Business[];
   @CreateDateColumn()
   createdAt: Date;
   @UpdateDateColumn()
