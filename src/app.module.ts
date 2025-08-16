@@ -9,6 +9,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
+import { EncryptModule } from './common/encrypt/encrypt.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { DataResponseInterceptor } from './common/interceptors/data-response.interceptor';
 
 // Get the current NODE_ENV
 const ENV = process.env.NODE_ENV;
@@ -38,8 +41,9 @@ const ENV = process.env.NODE_ENV;
     UsersModule,
     AdminModule,
     AuthModule,
+    EncryptModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_INTERCEPTOR, useClass: DataResponseInterceptor }],
 })
-export class AppModule {}
+export class AppModule { }
