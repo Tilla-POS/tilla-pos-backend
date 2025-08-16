@@ -4,6 +4,7 @@ import { DataSource, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { BadRequestException, RequestTimeoutException } from '@nestjs/common';
+import { Hashing } from '../common/encrypt/provider/hashing';
 
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 const mockRepository = <T = any>(): MockRepository<T> => {
@@ -44,6 +45,7 @@ describe('UsersService', () => {
         UsersService,
         { provide: DataSource, useValue: {} },
         { provide: getRepositoryToken(User), useValue: mockRepository() },
+        { provide: Hashing, useValue: { hashPassword: jest.fn(() => Promise.resolve('hashedPassword')) } }
       ],
     }).compile();
 
@@ -58,11 +60,11 @@ describe('UsersService', () => {
   describe('create', () => {
     describe('when the user is created', () => {
       it('should create a new user', async () => {
-        userRepository.create.mockReturnValue(user);
-        userRepository.save.mockResolvedValue(user);
+        userRepository.create.mockReturnValue({ ...user, password: 'hashedPassword' });
+        userRepository.save.mockResolvedValue({ ...user, password: 'hashedPassword' });
         await service.create(user);
-        expect(userRepository.create).toHaveBeenCalledWith(user);
-        expect(userRepository.save).toHaveBeenCalledWith(user);
+        expect(userRepository.create).toHaveBeenCalledWith({ ...user, password: 'hashedPassword' });
+        expect(userRepository.save).toHaveBeenCalledWith({ ...user, password: 'hashedPassword' });
       });
     });
     describe('when the repo return error', () => {

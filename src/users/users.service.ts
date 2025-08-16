@@ -8,6 +8,7 @@ import { PatchUserDto, PutUserDto } from './dto/update-user.dto';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Hashing } from '../common/encrypt/provider/hashing';
 
 @Injectable()
 export class UsersService {
@@ -17,11 +18,18 @@ export class UsersService {
      */
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    /**
+     * Inject Hashing Service
+     */
+    private readonly hashingService: Hashing
   ) {}
 
   async create(createUserDto: CreateUserDto) {
     try {
-      const newUser = this.userRepository.create(createUserDto);
+      const newUser = this.userRepository.create({
+        ...createUserDto,
+        password: await this.hashingService.hashPassword(createUserDto.password),
+      });
       return await this.userRepository.save(newUser);
     } catch (error) {
       throw new RequestTimeoutException(
