@@ -36,7 +36,10 @@ describe('BcryptProvider', () => {
     it('should return false for an incorrect password', async () => {
       const password = 'mysecretpassword';
       const hashedPassword = await provider.hashPassword(password);
-      const isMatch = await provider.comparePassword('wrongpassword', hashedPassword);
+      const isMatch = await provider.comparePassword(
+        'wrongpassword',
+        hashedPassword,
+      );
       expect(isMatch).toBeFalsy();
     });
   });

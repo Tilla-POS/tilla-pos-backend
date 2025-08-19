@@ -4,6 +4,6 @@ import { Hashing } from './provider/hashing';
 
 @Module({
   providers: [{ provide: Hashing, useClass: BcryptProvider }],
-  exports: [Hashing]
+  exports: [Hashing],
 })
 export class EncryptModule {}

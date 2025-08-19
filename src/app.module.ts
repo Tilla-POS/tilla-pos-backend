@@ -44,6 +44,9 @@ const ENV = process.env.NODE_ENV;
     EncryptModule,
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_INTERCEPTOR, useClass: DataResponseInterceptor }],
+  providers: [
+    AppService,
+    { provide: APP_INTERCEPTOR, useClass: DataResponseInterceptor },
+  ],
 })
-export class AppModule { }
+export class AppModule {}

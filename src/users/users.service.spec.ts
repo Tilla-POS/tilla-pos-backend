@@ -45,7 +45,12 @@ describe('UsersService', () => {
         UsersService,
         { provide: DataSource, useValue: {} },
         { provide: getRepositoryToken(User), useValue: mockRepository() },
-        { provide: Hashing, useValue: { hashPassword: jest.fn(() => Promise.resolve('hashedPassword')) } }
+        {
+          provide: Hashing,
+          useValue: {
+            hashPassword: jest.fn(() => Promise.resolve('hashedPassword')),
+          },
+        },
       ],
     }).compile();
 
@@ -60,11 +65,23 @@ describe('UsersService', () => {
   describe('create', () => {
     describe('when the user is created', () => {
       it('should create a new user', async () => {
-        userRepository.create.mockReturnValue({ ...user, password: 'hashedPassword' });
-        userRepository.save.mockResolvedValue({ ...user, password: 'hashedPassword' });
+        userRepository.create.mockReturnValue({
+          ...user,
+          password: 'hashedPassword',
+        });
+        userRepository.save.mockResolvedValue({
+          ...user,
+          password: 'hashedPassword',
+        });
         await service.create(user);
-        expect(userRepository.create).toHaveBeenCalledWith({ ...user, password: 'hashedPassword' });
-        expect(userRepository.save).toHaveBeenCalledWith({ ...user, password: 'hashedPassword' });
+        expect(userRepository.create).toHaveBeenCalledWith({
+          ...user,
+          password: 'hashedPassword',
+        });
+        expect(userRepository.save).toHaveBeenCalledWith({
+          ...user,
+          password: 'hashedPassword',
+        });
       });
     });
     describe('when the repo return error', () => {
@@ -117,6 +134,28 @@ describe('UsersService', () => {
           expect(userRepository.findOne).toHaveBeenCalledWith({
             where: { id: dummyId },
           });
+        } catch (error) {
+          expect(error).toBeInstanceOf(RequestTimeoutException);
+        }
+      });
+    });
+  });
+  describe('findByEmail', () => {
+    describe('when the repo success', () => {
+      it('should return the user', async () => {
+        userRepository.findOne.mockResolvedValue(user);
+        const result = await service.findByEmail(user.email);
+        expect(userRepository.findOne).toHaveBeenCalledWith({
+          where: { email: user.email },
+        });
+        expect(result).toBe(user);
+      });
+    });
+    describe('when the repo fails', () => {
+      it('should throw request timeout exception', async () => {
+        userRepository.findOne.mockRejectedValue('error');
+        try {
+          await service.findByEmail(user.email);
         } catch (error) {
           expect(error).toBeInstanceOf(RequestTimeoutException);
         }

@@ -21,14 +21,16 @@ export class UsersService {
     /**
      * Inject Hashing Service
      */
-    private readonly hashingService: Hashing
+    private readonly hashingService: Hashing,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
     try {
       const newUser = this.userRepository.create({
         ...createUserDto,
-        password: await this.hashingService.hashPassword(createUserDto.password),
+        password: await this.hashingService.hashPassword(
+          createUserDto.password,
+        ),
       });
       return await this.userRepository.save(newUser);
     } catch (error) {
@@ -56,6 +58,17 @@ export class UsersService {
     } catch (error) {
       throw new RequestTimeoutException(
         `Failed to retrieve user with ID ${id}. Please try again later.`,
+        error,
+      );
+    }
+  }
+
+  async findByEmail(email: string) {
+    try {
+      return await this.userRepository.findOne({ where: { email: email } });
+    } catch (error) {
+      throw new RequestTimeoutException(
+        `Failed to retrieve user with email ${email}. Please try again later.`,
         error,
       );
     }
