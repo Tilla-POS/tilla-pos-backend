@@ -263,7 +263,7 @@ describe('UsersService', () => {
   });
   describe('restore', () => {
     describe('when the restore success', () => {
-      it('should throw bad request exception', async () => {
+      it('should restore the user', async () => {
         userRepository.restore.mockResolvedValue(affectedRes);
         const res = await service.restore(dummyId);
         expect(res).toBe(affectedRes);
