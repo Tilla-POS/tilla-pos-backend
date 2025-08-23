@@ -12,31 +12,18 @@ import { DeleteParams } from './interfaces/delete-params.interface';
 
 @Injectable()
 export class UploadsService {
-  private s3Client: S3Client;
   constructor(
     @Inject(uploadConfig.KEY)
     private readonly uploadConfiguration: ConfigType<typeof uploadConfig>,
-  ) {
-    this.s3Client = new S3Client({
-      region: this.uploadConfiguration.awsRegion,
-      credentials: {
-        accessKeyId: this.uploadConfiguration.awsAccessKeyId,
-        secretAccessKey: this.uploadConfiguration.awsSecretAccessKey,
-      },
-    });
-  }
+    private readonly s3Client: S3Client,
+  ) {}
 
   async upload(params: UploadParams) {
     try {
-      const [, region] = await Promise.all([
-        this.s3Client.send(new PutObjectCommand(params)),
-        this.s3Client.config.region,
-      ]);
+      await this.s3Client.send(new PutObjectCommand(params));
       return {
         success: true,
-        url: `https://${params.Bucket}.s3.${region}.amazonaws.com/${params.Key}`,
-        source: `${this.uploadConfiguration.apiDomain}/uploads/${params.Key}`,
-        key: params.Key,
+        url: `${this.uploadConfiguration.apiDomain}/uploads/${params.Key}`,
       };
     } catch (error) {
       return { success: false, error };
