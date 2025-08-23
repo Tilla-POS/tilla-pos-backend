@@ -14,6 +14,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { DataResponseInterceptor } from './common/interceptors/data-response.interceptor';
 import { BusinessesModule } from './businesses/businesses.module';
 import { BusinessTypesModule } from './business-types/business-types.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 // Get the current NODE_ENV
 const ENV = process.env.NODE_ENV;
@@ -46,6 +47,7 @@ const ENV = process.env.NODE_ENV;
     EncryptModule,
     BusinessesModule,
     BusinessTypesModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -19,4 +19,5 @@ export default Joi.object({
   AWS_SECRET_ACCESS_KEY: Joi.string().required(),
   AWS_REGION: Joi.string().required(),
   AWS_CLOUDFRONT_URL: Joi.string().required(),
+  API_DOMAIN: Joi.string().required(),
 });

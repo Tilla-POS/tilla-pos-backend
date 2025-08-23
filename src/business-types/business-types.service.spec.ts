@@ -161,7 +161,6 @@ describe('BusinessTypesService', () => {
         });
         const updateDto = { name: 'Updated Retail' };
         const result = await service.update(dummyId, updateDto);
-        console.log('result', result);
         expect(businessTypeRepository.findOneBy).toHaveBeenCalledWith({
           id: dummyId,
         });

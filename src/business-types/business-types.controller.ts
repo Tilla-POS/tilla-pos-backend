@@ -87,7 +87,7 @@ export class BusinessTypesController {
     return this.businessTypesService.remove(id);
   }
 
-  @Post('restore')
+  @Post('restore/:id')
   @ApiOperation({
     summary: 'Restore a deleted business type by ID',
     description:
