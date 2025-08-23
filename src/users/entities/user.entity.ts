@@ -4,9 +4,11 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Business } from '../../businesses/entities/business.entity';
 
 @Entity('users')
 export class User {
@@ -40,6 +42,8 @@ export class User {
   })
   @Exclude()
   password: string;
+  @OneToOne(() => Business, (business) => business.shopkeeper)
+  business: Business;
   @CreateDateColumn()
   createdAt: Date;
   @UpdateDateColumn()

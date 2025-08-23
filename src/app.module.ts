@@ -10,11 +10,13 @@ import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { EncryptModule } from './common/encrypt/encrypt.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { DataResponseInterceptor } from './common/interceptors/data-response.interceptor';
 import { BusinessesModule } from './businesses/businesses.module';
 import { BusinessTypesModule } from './business-types/business-types.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { AuthenticationGuard } from './auth/guards/access-token/authentication.guard';
+import { AccessTokenGuard } from './auth/guards/access-token/access-token.guard';
 
 // Get the current NODE_ENV
 const ENV = process.env.NODE_ENV;
@@ -53,6 +55,9 @@ const ENV = process.env.NODE_ENV;
   providers: [
     AppService,
     { provide: APP_INTERCEPTOR, useClass: DataResponseInterceptor },
+    { provide: APP_GUARD, useClass: AuthenticationGuard },
+    AccessTokenGuard,
+    AuthModule,
   ],
 })
 export class AppModule {}

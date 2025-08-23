@@ -4,12 +4,15 @@ import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
+  Entity,
+  JoinColumn,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
+@Entity('businesses')
 export class Business {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -26,6 +29,7 @@ export class Business {
   })
   currency: string;
   @ManyToOne(() => BusinessType)
+  @JoinColumn({ name: 'business_type_id' })
   businessType: BusinessType;
   @Column({
     type: 'varchar',
@@ -34,6 +38,7 @@ export class Business {
   })
   image: string;
   @OneToOne(() => User)
+  @JoinColumn({ name: 'shopkeeper_id' })
   shopkeeper: User;
   @CreateDateColumn()
   createdAt: Date;

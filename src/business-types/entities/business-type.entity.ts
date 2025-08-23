@@ -3,9 +3,11 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Business } from '../../businesses/entities/business.entity';
 
 @Entity('business_types')
 export class BusinessType {
@@ -31,6 +33,8 @@ export class BusinessType {
     nullable: true,
   })
   description?: string;
+  @OneToMany(() => Business, (business) => business.businessType)
+  businesses: Business[];
   @CreateDateColumn()
   createdAt: Date;
   @UpdateDateColumn()

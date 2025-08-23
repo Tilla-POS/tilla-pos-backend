@@ -6,8 +6,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 
 @Module({
   imports: [ConfigModule.forFeature(uploadConfig)],
-  providers: [UploadsService],
-  exports: [
+  providers: [
     UploadsService,
     {
       provide: S3Client,
@@ -23,5 +22,6 @@ import { S3Client } from '@aws-sdk/client-s3';
       },
     },
   ],
+  exports: [UploadsService],
 })
 export class UploadsModule {}
