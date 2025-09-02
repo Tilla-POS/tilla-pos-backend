@@ -12,12 +12,12 @@ export class CreateBusinessDto {
   name: string;
 
   @ApiProperty({
-    example: '123-456-7890',
-    description: 'The contact phone number of the business',
+    example: 'my-business',
+    description: 'The unique name of the business',
   })
   @IsNotEmpty()
   @IsString()
-  phone: string;
+  slug: string;
 
   @ApiProperty({
     example: 'THB',
@@ -34,12 +34,4 @@ export class CreateBusinessDto {
   @IsNotEmpty()
   @IsUUID()
   businessTypeId: string;
-
-  @ApiProperty({
-    example: 'https://example.com/image.png',
-    description: 'The URL of the business image',
-  })
-  @IsNotEmpty()
-  @IsUUID()
-  shopkeeperId: string;
 }

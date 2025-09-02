@@ -1,26 +1,230 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  RequestTimeoutException,
+} from '@nestjs/common';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
+import { User } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Business } from './entities/business.entity';
+import { Repository } from 'typeorm';
+import { UploadsService } from '../uploads/uploads.service';
+import { UploadParams } from '../uploads/interfaces/upload-params.interface';
+import { ConfigService } from '@nestjs/config';
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { BusinessType } from '../business-types/entities/business-type.entity';
+import { BusinessTypesService } from '../business-types/business-types.service';
+import { DeleteParams } from '../uploads/interfaces/delete-params.interface';
 
 @Injectable()
 export class BusinessesService {
-  create(createBusinessDto: CreateBusinessDto) {
-    return 'This action adds a new business';
+  constructor(
+    @InjectRepository(Business)
+    private readonly businessRepository: Repository<Business>,
+    private readonly userService: UsersService,
+    private readonly uploadService: UploadsService,
+    private readonly businessTypesService: BusinessTypesService,
+    private readonly config: ConfigService,
+  ) {}
+  async create(
+    createBusinessDto: CreateBusinessDto,
+    file: Express.Multer.File,
+    userId: string,
+  ) {
+    let user: User;
+    try {
+      user = await this.userService.findOne(userId);
+    } catch (e) {
+      throw new RequestTimeoutException(
+        `Failed to find user with ID ${userId}. Please try again later.`,
+        e,
+      );
+    }
+    if (!user) {
+      throw new BadRequestException(`User with ID ${userId} not found.`);
+    }
+    let businessType: BusinessType;
+    try {
+      businessType = await this.businessTypesService.findOne(
+        createBusinessDto.businessTypeId,
+      );
+    } catch (e) {
+      throw new RequestTimeoutException(
+        `Failed to find business type with ID ${createBusinessDto.businessTypeId}. Please try again later.`,
+        e,
+      );
+    }
+    if (!businessType) {
+      throw new BadRequestException(
+        `Business type with ID ${createBusinessDto.businessTypeId} not found.`,
+      );
+    }
+    const isBusinessExisted: boolean =
+      !!(await this.businessRepository.findOneBy({
+        slug: createBusinessDto.slug,
+      }));
+    if (isBusinessExisted) {
+      throw new BadRequestException('Business name is already existed');
+    }
+    const newBusiness = this.businessRepository.create({
+      ...createBusinessDto,
+      businessType,
+      shopkeeper: user,
+      image: await this.uploadFile(file),
+    });
+    try {
+      return await this.businessRepository.save(newBusiness);
+    } catch (e) {
+      console.log(e);
+      throw new RequestTimeoutException('Failed to create the business', e);
+    }
   }
 
-  findAll() {
-    return `This action returns all businesses`;
+  async findAll() {
+    try {
+      return await this.businessRepository.find({
+        relations: ['businessType', 'shopkeeper'],
+      });
+    } catch (e) {
+      throw new RequestTimeoutException('Fail to fetch the businesses', e);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} business`;
+  async findOne(id: string) {
+    try {
+      return await this.businessRepository.findOne({
+        where: { id },
+        relations: ['businessType', 'shopkeeper'],
+      });
+    } catch (error) {
+      throw new RequestTimeoutException(
+        `Failed to fetch business with ID ${id}.`,
+        error,
+      );
+    }
   }
 
-  update(id: number, updateBusinessDto: UpdateBusinessDto) {
-    return `This action updates a #${id} business`;
+  async update(
+    id: string,
+    updateBusinessDto: UpdateBusinessDto,
+    file?: Express.Multer.File,
+  ) {
+    let business: Business;
+    try {
+      business = await this.businessRepository.findOneBy({ id });
+    } catch (error) {
+      throw new RequestTimeoutException(`Fail to fetch business ${id}`, error);
+    }
+    if (!business) {
+      throw new BadRequestException(`Business with ID ${id} not found.`);
+    }
+    if (file) {
+      // Delete old image if exist
+      if (business.image) {
+        await this.deleteFile(business.image);
+        business.image = await this.uploadFile(file);
+      }
+    }
+    Object.assign(business, updateBusinessDto);
+    try {
+      return await this.businessRepository.save(business);
+    } catch (error) {
+      throw new RequestTimeoutException('Fail to update the business', error);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} business`;
+  async remove(id: string) {
+    let business: Business;
+    try {
+      business = await this.businessRepository.findOneBy({ id });
+    } catch (error) {
+      throw new RequestTimeoutException(`Fail to fetch business with ID ${id}`);
+    }
+    if (!business) {
+      throw new BadRequestException(`Business with ID ${id} not found.`);
+    }
+    try {
+      return await this.businessRepository.softDelete(business);
+    } catch (error) {
+      throw new RequestTimeoutException('Fail to delete the business', error);
+    }
+  }
+
+  async restore(id: string) {
+    try {
+      return await this.businessRepository.restore(id);
+    } catch (error) {
+      throw new RequestTimeoutException('Fail to restore the business', error);
+    }
+  }
+
+  private generateFileName(file: Express.Multer.File) {
+    // extract file name
+    const name = file.originalname.split('.')[0];
+    // Remove spaces in the file name
+    name.replace(/\s/g, '').trim();
+    // extract file extension
+    const extension = path.extname(file.originalname);
+    // Generate a timestamp
+    const timeStamp = new Date().getTime().toString().trim();
+    // Return new fileName
+    return `${name}-${timeStamp}-${uuidv4()}${extension}`;
+  }
+
+  /**
+   * Extract key from image url [https://domain/api/v1/img-key => img-key]
+   * @param imgUrl {string}
+   * @private
+   */
+  private extractKeyFromImageUrl(imgUrl: string) {
+    const urlParts = imgUrl.split('/');
+    return urlParts[3];
+  }
+
+  /**
+   * Upload file and return image url
+   * @param file {Express.Multer.File}
+   * @private
+   */
+  private async uploadFile(file: Express.Multer.File) {
+    const uploadParams: UploadParams = {
+      Bucket: this.config.get<string>('appConfig.awsBucketName'),
+      Key: this.generateFileName(file),
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    };
+    let image: { url: string; success: boolean; error: any | undefined };
+    try {
+      image = await this.uploadService.upload(uploadParams);
+    } catch (error) {
+      throw new RequestTimeoutException(`Failed to upload the image`, error);
+    }
+    if (!image.success) {
+      throw new RequestTimeoutException(
+        'Fail to upload the image',
+        image.error,
+      );
+    }
+    return image.url;
+  }
+
+  /**
+   * Delete file
+   * @param imgUrl {string}
+   * @private
+   */
+  private async deleteFile(imgUrl: string) {
+    const deleteParams: DeleteParams = {
+      Key: this.extractKeyFromImageUrl(imgUrl),
+      Bucket: this.config.get<string>('appConfig.awsBucketName'),
+    };
+    try {
+      await this.uploadService.delete(deleteParams);
+    } catch (error) {
+      throw new RequestTimeoutException(`Fail to delete image`, error);
+    }
   }
 }

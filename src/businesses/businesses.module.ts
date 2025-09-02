@@ -3,9 +3,17 @@ import { BusinessesService } from './businesses.service';
 import { BusinessesController } from './businesses.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Business } from './entities/business.entity';
+import { UsersModule } from '../users/users.module';
+import { UploadsModule } from '../uploads/uploads.module';
+import { BusinessTypesModule } from '../business-types/business-types.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Business])],
+  imports: [
+    TypeOrmModule.forFeature([Business]),
+    UsersModule,
+    UploadsModule,
+    BusinessTypesModule,
+  ],
   controllers: [BusinessesController],
   providers: [BusinessesService],
 })

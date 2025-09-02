@@ -28,6 +28,13 @@ export class Business {
     nullable: false,
   })
   currency: string;
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: false,
+    unique: true,
+  })
+  slug: string;
   @ManyToOne(() => BusinessType)
   @JoinColumn({ name: 'business_type_id' })
   businessType: BusinessType;

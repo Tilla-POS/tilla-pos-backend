@@ -24,9 +24,11 @@ export class UploadsService {
       return {
         success: true,
         url: `${this.uploadConfiguration.apiDomain}/uploads/${params.Key}`,
+        error: undefined,
       };
     } catch (error) {
-      return { success: false, error };
+      console.error(error);
+      return { success: false, error, url: '' };
     }
   }
 
