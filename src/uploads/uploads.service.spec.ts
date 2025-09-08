@@ -65,7 +65,6 @@ describe('UploadsService', () => {
         `${mockUploadConfig.apiDomain}/uploads/${params.Key}`,
       );
     });
-
     it('should return an error if upload fails', async () => {
       const params: UploadParams = {
         Bucket: 'test-bucket',
@@ -81,6 +80,7 @@ describe('UploadsService', () => {
       expect(result).toEqual({
         success: false,
         error: new Error('upload failed'),
+        url: '',
       });
     });
   });

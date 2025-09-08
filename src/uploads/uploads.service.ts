@@ -27,7 +27,6 @@ export class UploadsService {
         error: undefined,
       };
     } catch (error) {
-      console.error(error);
       return { success: false, error, url: '' };
     }
   }
