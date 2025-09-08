@@ -11,7 +11,7 @@ import { REQUEST_USER_KEY } from '../../constants/auth.constant';
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
   constructor(private readonly jwtProvider: JwtProviders) {}
-  canActivate(context: ExecutionContext): boolean | Promise<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     // Extract the request from the execution context
     const request = context.switchToHttp().getRequest();
     // Extract the token from the header
@@ -20,7 +20,7 @@ export class AccessTokenGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     try {
-      request[REQUEST_USER_KEY] = this.jwtProvider.verify(token);
+      request[REQUEST_USER_KEY] = await this.jwtProvider.verify(token);
     } catch {
       throw new UnauthorizedException();
     }
