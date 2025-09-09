@@ -6,7 +6,6 @@ import { UploadsService } from '../uploads/uploads.service';
 import { BusinessTypesService } from '../business-types/business-types.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Business } from './entities/business.entity';
-import { ConfigService } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
 
 type MockBusinessRepo = Partial<Record<keyof Repository<Business>, jest.Mock>>;
@@ -47,8 +46,8 @@ const mockUsersService = (): MockUserService => {
 };
 const mockUploadsService = (): MockUploadsService => {
   return {
-    upload: jest.fn(),
-    delete: jest.fn(),
+    uploadFile: jest.fn(),
+    deleteFile: jest.fn(),
   };
 };
 const mockBusinessTypesService = (): MockBusinessTypeService => {
@@ -76,10 +75,6 @@ describe('BusinessesService', () => {
         { provide: UsersService, useValue: mockUsersService() },
         { provide: UploadsService, useValue: mockUploadsService() },
         { provide: BusinessTypesService, useValue: mockBusinessTypesService() },
-        {
-          provide: ConfigService,
-          useValue: { get: jest.fn().mockReturnValue('bucket-name') },
-        },
       ],
     }).compile();
 
@@ -101,11 +96,7 @@ describe('BusinessesService', () => {
       usersService.findOne.mockResolvedValue(mockUser as any);
       businessTypesService.findOne.mockResolvedValue(mockBusinessType as any);
       businessesRepository.findOneBy.mockResolvedValue(null);
-      uploadsService.upload.mockResolvedValue({
-        url: 'http://img/new.png',
-        success: true,
-        error: undefined,
-      });
+      uploadsService.uploadFile.mockResolvedValue('http://img/new.png');
       businessesRepository.create.mockReturnValue({
         ...mockBusiness,
         id: 'biz-new',
@@ -184,11 +175,7 @@ describe('BusinessesService', () => {
       businessesRepository.findOneBy.mockResolvedValue({
         ...mockBusiness,
       } as any);
-      uploadsService.upload.mockResolvedValue({
-        url: 'http://img/new.png',
-        success: true,
-        error: undefined,
-      });
+      uploadsService.uploadFile.mockResolvedValue('http://img/new.png');
       businessesRepository.save.mockResolvedValue({
         ...mockBusiness,
         image: 'http://img/new.png',

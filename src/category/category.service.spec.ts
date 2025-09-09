@@ -1,15 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CategoryService } from './category.service';
+import { CategoriesService } from './category.service';
+import { DataSource } from 'typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Category } from './entities/category.entity';
+import { UploadsService } from '../uploads/uploads.service';
 
 describe('CategoryService', () => {
-  let service: CategoryService;
+  let service: CategoriesService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CategoryService],
+      providers: [
+        CategoriesService,
+        { provide: DataSource, useValue: {} },
+        { provide: getRepositoryToken(Category), useValue: {} },
+        { provide: UploadsService, useValue: {} },
+      ],
     }).compile();
 
-    service = module.get<CategoryService>(CategoryService);
+    service = module.get<CategoriesService>(CategoriesService);
   });
 
   it('should be defined', () => {

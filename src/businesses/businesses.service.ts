@@ -11,13 +11,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Business } from './entities/business.entity';
 import { Repository } from 'typeorm';
 import { UploadsService } from '../uploads/uploads.service';
-import { UploadParams } from '../uploads/interfaces/upload-params.interface';
-import { ConfigService } from '@nestjs/config';
-import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import { BusinessType } from '../business-types/entities/business-type.entity';
 import { BusinessTypesService } from '../business-types/business-types.service';
-import { DeleteParams } from '../uploads/interfaces/delete-params.interface';
 
 @Injectable()
 export class BusinessesService {
@@ -27,7 +22,6 @@ export class BusinessesService {
     private readonly userService: UsersService,
     private readonly uploadService: UploadsService,
     private readonly businessTypesService: BusinessTypesService,
-    private readonly config: ConfigService,
   ) {}
   async create(
     createBusinessDto: CreateBusinessDto,
@@ -73,7 +67,7 @@ export class BusinessesService {
       ...createBusinessDto,
       businessType,
       shopkeeper: user,
-      image: await this.uploadFile(file),
+      image: await this.uploadService.uploadFile(file),
     });
     try {
       return await this.businessRepository.save(newBusiness);
@@ -124,8 +118,8 @@ export class BusinessesService {
     if (file) {
       // Delete old image if exist
       if (business.image) {
-        await this.deleteFile(business.image);
-        business.image = await this.uploadFile(file);
+        await this.uploadService.deleteFile(business.image);
+        business.image = await this.uploadService.uploadFile(file);
       }
     }
     Object.assign(business, updateBusinessDto);
@@ -158,73 +152,6 @@ export class BusinessesService {
       return await this.businessRepository.restore(id);
     } catch (error) {
       throw new RequestTimeoutException('Fail to restore the business', error);
-    }
-  }
-
-  private generateFileName(file: Express.Multer.File) {
-    // extract file name
-    const name = file.originalname.split('.')[0];
-    // Remove spaces in the file name
-    name.replace(/\s/g, '').trim();
-    // extract file extension
-    const extension = path.extname(file.originalname);
-    // Generate a timestamp
-    const timeStamp = new Date().getTime().toString().trim();
-    // Return new fileName
-    return `${name}-${timeStamp}-${uuidv4()}${extension}`;
-  }
-
-  /**
-   * Extract key from image url [https://domain/api/v1/img-key => img-key]
-   * @param imgUrl {string}
-   * @private
-   */
-  private extractKeyFromImageUrl(imgUrl: string) {
-    const urlParts = imgUrl.split('/');
-    return urlParts[3];
-  }
-
-  /**
-   * Upload file and return image url
-   * @param file {Express.Multer.File}
-   * @private
-   */
-  private async uploadFile(file: Express.Multer.File) {
-    const uploadParams: UploadParams = {
-      Bucket: this.config.get<string>('appConfig.awsBucketName'),
-      Key: this.generateFileName(file),
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    };
-    let image: { url: string; success: boolean; error: any | undefined };
-    try {
-      image = await this.uploadService.upload(uploadParams);
-    } catch (error) {
-      throw new RequestTimeoutException(`Failed to upload the image`, error);
-    }
-    if (!image.success) {
-      throw new RequestTimeoutException(
-        'Fail to upload the image',
-        image.error,
-      );
-    }
-    return image.url;
-  }
-
-  /**
-   * Delete file
-   * @param imgUrl {string}
-   * @private
-   */
-  private async deleteFile(imgUrl: string) {
-    const deleteParams: DeleteParams = {
-      Key: this.extractKeyFromImageUrl(imgUrl),
-      Bucket: this.config.get<string>('appConfig.awsBucketName'),
-    };
-    try {
-      await this.uploadService.delete(deleteParams);
-    } catch (error) {
-      throw new RequestTimeoutException(`Fail to delete image`, error);
     }
   }
 }

@@ -9,19 +9,13 @@ import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { UploadParams } from '../uploads/interfaces/upload-params.interface';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { ConfigService } from '@nestjs/config';
 import { UploadsService } from '../uploads/uploads.service';
-import { DeleteParams } from '../uploads/interfaces/delete-params.interface';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
-    private readonly config: ConfigService,
     private readonly uploadService: UploadsService,
   ) {}
 
@@ -31,7 +25,9 @@ export class CategoriesService {
         'Image is required either as a file or URL string',
       );
     }
-    const imageUrl = file ? await this.uploadFile(file) : dto.image;
+    const imageUrl = file
+      ? await this.uploadService.uploadFile(file)
+      : dto.image;
     const category = this.categoryRepo.create({ ...dto, image: imageUrl });
     try {
       return await this.categoryRepo.save(category);
@@ -78,8 +74,8 @@ export class CategoriesService {
     if (file) {
       // Delete old image if exist
       if (category.image) {
-        await this.deleteFile(category.image);
-        category.image = await this.uploadFile(file);
+        await this.uploadService.deleteFile(category.image);
+        category.image = await this.uploadService.uploadFile(file);
       }
     } else if (dto.image) {
       category.image = dto.image;
@@ -104,73 +100,6 @@ export class CategoriesService {
       return await this.categoryRepo.softRemove(category);
     } catch (e) {
       throw new RequestTimeoutException(`Fail to remove the category ${id}`, e);
-    }
-  }
-
-  private generateFileName(file: Express.Multer.File) {
-    // extract file name
-    const name = file.originalname.split('.')[0];
-    // Remove spaces in the file name
-    name.replace(/\s/g, '').trim();
-    // extract file extension
-    const extension = path.extname(file.originalname);
-    // Generate a timestamp
-    const timeStamp = new Date().getTime().toString().trim();
-    // Return new fileName
-    return `${name}-${timeStamp}-${uuidv4()}${extension}`;
-  }
-
-  /**
-   * Extract key from image url [https://domain/api/v1/img-key => img-key]
-   * @param imgUrl {string}
-   * @private
-   */
-  private extractKeyFromImageUrl(imgUrl: string) {
-    const urlParts = imgUrl.split('/');
-    return urlParts[3];
-  }
-
-  /**
-   * Upload file and return image url
-   * @param file {Express.Multer.File}
-   * @private
-   */
-  private async uploadFile(file: Express.Multer.File) {
-    const uploadParams: UploadParams = {
-      Bucket: this.config.get<string>('appConfig.awsBucketName'),
-      Key: this.generateFileName(file),
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    };
-    let image: { url: string; success: boolean; error: any | undefined };
-    try {
-      image = await this.uploadService.upload(uploadParams);
-    } catch (error) {
-      throw new RequestTimeoutException(`Failed to upload the image`, error);
-    }
-    if (!image.success) {
-      throw new RequestTimeoutException(
-        'Fail to upload the image',
-        image.error,
-      );
-    }
-    return image.url;
-  }
-
-  /**
-   * Delete file
-   * @param imgUrl {string}
-   * @private
-   */
-  private async deleteFile(imgUrl: string) {
-    const deleteParams: DeleteParams = {
-      Key: this.extractKeyFromImageUrl(imgUrl),
-      Bucket: this.config.get<string>('appConfig.awsBucketName'),
-    };
-    try {
-      await this.uploadService.delete(deleteParams);
-    } catch (error) {
-      throw new RequestTimeoutException(`Fail to delete image`, error);
     }
   }
 }
