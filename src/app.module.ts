@@ -18,6 +18,7 @@ import { UploadsModule } from './uploads/uploads.module';
 import { AuthenticationGuard } from './auth/guards/access-token/authentication.guard';
 import { AccessTokenGuard } from './auth/guards/access-token/access-token.guard';
 import { ModifierModule } from './modifier/modifier.module';
+import { CategoryModule } from './category/category.module';
 
 // Get the current NODE_ENV
 const ENV = process.env.NODE_ENV;
@@ -52,6 +53,7 @@ const ENV = process.env.NODE_ENV;
     BusinessTypesModule,
     UploadsModule,
     ModifierModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [
