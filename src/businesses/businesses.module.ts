@@ -16,5 +16,6 @@ import { BusinessTypesModule } from '../business-types/business-types.module';
   ],
   controllers: [BusinessesController],
   providers: [BusinessesService],
+  exports: [BusinessesService],
 })
 export class BusinessesModule {}

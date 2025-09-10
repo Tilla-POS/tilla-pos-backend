@@ -10,6 +10,8 @@ import {
   HttpCode,
   UseInterceptors,
   ClassSerializerInterceptor,
+  ParseUUIDPipe,
+  HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -71,7 +73,13 @@ export class UsersController {
     required: true,
     type: String,
   })
-  findOne(@Param('id') id: string) {
+  findOne(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.usersService.findOne(id);
   }
 
@@ -91,7 +99,14 @@ export class UsersController {
     required: true,
     type: String,
   })
-  updateAll(@Param('id') id: string, @Body() updateUserDto: PutUserDto) {
+  updateAll(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+    @Body() updateUserDto: PutUserDto,
+  ) {
     return this.usersService.put(id, updateUserDto);
   }
 
@@ -111,7 +126,14 @@ export class UsersController {
     required: true,
     type: String,
   })
-  update(@Param('id') id: string, @Body() updateUserDto: PatchUserDto) {
+  update(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+    @Body() updateUserDto: PatchUserDto,
+  ) {
     return this.usersService.patch(id, updateUserDto);
   }
 
@@ -131,7 +153,13 @@ export class UsersController {
     required: true,
     type: String,
   })
-  remove(@Param('id') id: string) {
+  remove(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.usersService.remove(id);
   }
 
@@ -152,7 +180,13 @@ export class UsersController {
     required: true,
     type: String,
   })
-  restore(@Param('id') id: string) {
+  restore(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.usersService.restore(id);
   }
 }

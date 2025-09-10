@@ -1,18 +1,21 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Param,
-  Patch,
+  Controller,
   Delete,
-  UseInterceptors,
+  Get,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
   UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CategoriesService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ActiveUser } from '../auth/decorators/active-user.decorator';
 
 @Controller('categories')
 export class CategoriesController {
@@ -22,9 +25,14 @@ export class CategoriesController {
   @UseInterceptors(FileInterceptor('image'))
   create(
     @Body() dto: CreateCategoryDto,
+    @ActiveUser(
+      'businessId',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    businessId: string,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.service.create(dto, file);
+    return this.service.create(dto, businessId, file);
   }
 
   @Get()
@@ -33,14 +41,24 @@ export class CategoriesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.service.findOne(id);
   }
 
   @Patch(':id')
   @UseInterceptors(FileInterceptor('image'))
   update(
-    @Param('id') id: string,
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
     @Body() dto: UpdateCategoryDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
@@ -48,7 +66,13 @@ export class CategoriesController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.service.remove(id);
   }
 }

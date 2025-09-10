@@ -10,7 +10,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { UploadParams } from './interfaces/upload-params.interface';
 import { DeleteParams } from './interfaces/delete-params.interface';
-import path from 'path';
+import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -81,7 +81,7 @@ export class UploadsService {
    */
   private extractKeyFromImageUrl(imgUrl: string) {
     const urlParts = imgUrl.split('/');
-    return urlParts[3];
+    return urlParts[urlParts.length - 1];
   }
 
   /**

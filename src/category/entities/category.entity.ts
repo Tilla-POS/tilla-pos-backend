@@ -5,7 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  ManyToOne,
 } from 'typeorm';
+import { Business } from '../../businesses/entities/business.entity';
 
 @Entity('category')
 export class Category {
@@ -25,6 +27,9 @@ export class Category {
     length: 255,
   })
   image: string;
+
+  @ManyToOne(() => Business, { onDelete: 'CASCADE' })
+  business: Business;
 
   @CreateDateColumn()
   createdAt: Date;

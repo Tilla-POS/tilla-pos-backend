@@ -1,14 +1,16 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
-  Delete,
-  UseInterceptors,
-  UploadedFile,
   ClassSerializerInterceptor,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { BusinessesService } from './businesses.service';
 import { CreateBusinessDto } from './dto/create-business.dto';
@@ -26,7 +28,11 @@ export class BusinessesController {
   create(
     @Body() createBusinessDto: CreateBusinessDto,
     @UploadedFile() file: Express.Multer.File,
-    @ActiveUser('sub') user: string,
+    @ActiveUser(
+      'sub',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    user: string,
   ) {
     return this.businessesService.create(createBusinessDto, file, user);
   }
@@ -37,14 +43,24 @@ export class BusinessesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.businessesService.findOne(id);
   }
 
   @Patch(':id')
   @UseInterceptors(FileInterceptor('image'))
   update(
-    @Param('id') id: string,
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
     @Body() updateBusinessDto: UpdateBusinessDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
@@ -52,12 +68,24 @@ export class BusinessesController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.businessesService.remove(id);
   }
 
   @Post('/restore/:id')
-  restore(@Param('id') id: string) {
+  restore(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.businessesService.restore(id);
   }
 }

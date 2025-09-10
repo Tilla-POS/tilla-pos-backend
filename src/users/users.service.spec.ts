@@ -147,6 +147,7 @@ describe('UsersService', () => {
         const result = await service.findByEmail(user.email);
         expect(userRepository.findOne).toHaveBeenCalledWith({
           where: { email: user.email },
+          relations: ['business'],
         });
         expect(result).toBe(user);
       });

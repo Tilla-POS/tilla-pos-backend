@@ -118,6 +118,7 @@ describe('AuthService', () => {
         );
         expect(jwtProviders.signToken).toHaveBeenCalledWith(dummyId, 3600, {
           email: signinDto.email,
+          businessId: null,
         });
         expect(result).toEqual({ accessToken: 'access-token' });
       });

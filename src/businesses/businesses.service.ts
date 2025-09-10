@@ -88,6 +88,7 @@ export class BusinessesService {
   }
 
   async findOne(id: string) {
+    // if (!id) throw new BadRequestException(`Invalid business id`);
     try {
       return await this.businessRepository.findOne({
         where: { id },

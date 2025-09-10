@@ -43,7 +43,7 @@ export class UsersService {
 
   async findAll() {
     try {
-      return await this.userRepository.find();
+      return await this.userRepository.find({ relations: ['business'] });
     } catch (error) {
       throw new RequestTimeoutException(
         'Failed to retrieve users. Please try again later.',
@@ -65,7 +65,10 @@ export class UsersService {
 
   async findByEmail(email: string) {
     try {
-      return await this.userRepository.findOne({ where: { email: email } });
+      return await this.userRepository.findOne({
+        where: { email: email },
+        relations: ['business'],
+      });
     } catch (error) {
       throw new RequestTimeoutException(
         `Failed to retrieve user with email ${email}. Please try again later.`,

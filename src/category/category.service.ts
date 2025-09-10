@@ -10,6 +10,7 @@ import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UploadsService } from '../uploads/uploads.service';
+import { BusinessesService } from '../businesses/businesses.service';
 
 @Injectable()
 export class CategoriesService {
@@ -17,18 +18,31 @@ export class CategoriesService {
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
     private readonly uploadService: UploadsService,
+    private readonly businessesService: BusinessesService,
   ) {}
 
-  async create(dto: CreateCategoryDto, file?: Express.Multer.File) {
+  async create(
+    dto: CreateCategoryDto,
+    businessId: string,
+    file?: Express.Multer.File,
+  ) {
     if (!file && !dto.image) {
       throw new BadRequestException(
         'Image is required either as a file or URL string',
       );
     }
+    const business = await this.businessesService.findOne(businessId);
+    if (!business) {
+      throw new BadRequestException(`Business not found ${businessId}`);
+    }
     const imageUrl = file
       ? await this.uploadService.uploadFile(file)
       : dto.image;
-    const category = this.categoryRepo.create({ ...dto, image: imageUrl });
+    const category = this.categoryRepo.create({
+      ...dto,
+      image: imageUrl,
+      business,
+    });
     try {
       return await this.categoryRepo.save(category);
     } catch (e) {

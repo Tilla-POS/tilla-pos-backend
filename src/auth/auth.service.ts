@@ -31,6 +31,7 @@ export class AuthService {
     }
     const token = await this.jwtProvider.signToken(user.id, 3600, {
       email: user.email,
+      businessId: !!user.business ? user.business.id : null,
     });
     return { accessToken: token };
   }

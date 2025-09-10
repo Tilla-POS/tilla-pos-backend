@@ -6,6 +6,8 @@ import {
   Param,
   Patch,
   Delete,
+  ParseUUIDPipe,
+  HttpStatus,
 } from '@nestjs/common';
 import { ModifiersService } from './modifier.service';
 import { CreateModifierDto } from './dto/create-modifier.dto';
@@ -26,22 +28,47 @@ export class ModifiersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.service.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateModifierDto) {
+  update(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+    @Body() dto: UpdateModifierDto,
+  ) {
     return this.service.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.service.remove(id);
   }
 
   @Post('/restore/:id')
-  restore(@Param('id') id: string) {
+  restore(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.service.restore(id);
   }
 }

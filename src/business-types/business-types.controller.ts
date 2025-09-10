@@ -1,11 +1,13 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
 } from '@nestjs/common';
 import { BusinessTypesService } from './business-types.service';
 import { CreateBusinessTypeDto } from './dto/create-business-type.dto';
@@ -52,7 +54,15 @@ export class BusinessTypesController {
     status: 200,
     description: 'The business type has been successfully retrieved.',
   })
-  findOne(@Param('id') id: string) {
+  findOne(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
+      }),
+    )
+    id: string,
+  ) {
     return this.businessTypesService.findOne(id);
   }
 
@@ -67,7 +77,11 @@ export class BusinessTypesController {
     description: 'The business type has been successfully updated.',
   })
   update(
-    @Param('id') id: string,
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
     @Body() updateBusinessTypeDto: UpdateBusinessTypeDto,
   ) {
     return this.businessTypesService.update(id, updateBusinessTypeDto);
@@ -83,7 +97,13 @@ export class BusinessTypesController {
     status: 200,
     description: 'The business type has been successfully deleted.',
   })
-  remove(@Param('id') id: string) {
+  remove(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.businessTypesService.remove(id);
   }
 
@@ -97,7 +117,13 @@ export class BusinessTypesController {
     status: 200,
     description: 'The business type has been successfully restored.',
   })
-  restore(@Param('id') id: string) {
+  restore(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return this.businessTypesService.restore(id);
   }
 }
