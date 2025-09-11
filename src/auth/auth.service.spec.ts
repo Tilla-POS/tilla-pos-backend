@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { Hashing } from '../common/encrypt/provider/hashing';
 import { JwtProviders } from './providers/jwt.providers';
 import { UnauthorizedException } from '@nestjs/common';
+import { BusinessesService } from '../businesses/businesses.service';
 
 type MockUserService = Partial<Record<keyof UsersService, jest.Mock>>;
 const mockUserService = (): MockUserService => {
@@ -28,11 +29,19 @@ const mockHashing = (): MockHashing => {
   };
 };
 
+type MockBusinessService = Partial<Record<keyof BusinessesService, jest.Mock>>;
+const mockBusinessService = (): MockBusinessService => {
+  return {
+    create: jest.fn(),
+  };
+};
+
 describe('AuthService', () => {
   let service: AuthService;
   let userService: MockUserService;
   let hashingService: MockHashing;
   let jwtProviders: MockJwtProviders;
+  let businessService: MockBusinessService;
   const dummyId = 'uuid-1234';
   const signinDto = {
     email: 'john@doe.com',
@@ -44,10 +53,24 @@ describe('AuthService', () => {
     phone: '+66973541807',
     password: 'P@ssword123',
   };
+  const createBusinessDto = {
+    name: 'John Dame',
+    slug: 'john-dame',
+    shopkeeperId: dummyId,
+    email: 'john@doe.com',
+  };
   const createdUser = {
     id: dummyId,
     ...signupDto,
   };
+  const createdBusiness = {
+    id: 'business-1234',
+  };
+  const mockFile = {
+    originalname: 'logo.png',
+    buffer: Buffer.from('data'),
+    mimetype: 'image/png',
+  } as Express.Multer.File;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -55,6 +78,7 @@ describe('AuthService', () => {
         { provide: UsersService, useValue: mockUserService() },
         { provide: Hashing, useValue: mockHashing() },
         { provide: JwtProviders, useValue: mockJwtProviders() },
+        { provide: BusinessesService, useValue: mockBusinessService() },
       ],
     }).compile();
 
@@ -62,6 +86,7 @@ describe('AuthService', () => {
     userService = module.get<MockUserService>(UsersService);
     hashingService = module.get<MockHashing>(Hashing);
     jwtProviders = module.get<MockJwtProviders>(JwtProviders);
+    businessService = module.get<MockBusinessService>(BusinessesService);
   });
 
   it('should be defined', () => {
@@ -107,6 +132,7 @@ describe('AuthService', () => {
           id: dummyId,
           email: signinDto.email,
           password: 'hashedPassword',
+          business: { ...createdBusiness },
         });
         hashingService.comparePassword.mockResolvedValue(true);
         jwtProviders.signToken.mockResolvedValue('access-token');
@@ -118,9 +144,29 @@ describe('AuthService', () => {
         );
         expect(jwtProviders.signToken).toHaveBeenCalledWith(dummyId, 3600, {
           email: signinDto.email,
-          businessId: null,
+          businessId: createdBusiness.id,
         });
         expect(result).toEqual({ accessToken: 'access-token' });
+      });
+    });
+  });
+  describe('createBusiness', () => {
+    it('should return a token', async () => {
+      businessService.create.mockResolvedValue(createdBusiness);
+      jwtProviders.signToken.mockResolvedValue('access-token');
+      const result = await service.createBusiness(
+        createBusinessDto as any,
+        mockFile,
+      );
+      expect(businessService.create).toHaveBeenCalledWith(
+        createBusinessDto,
+        mockFile,
+        createBusinessDto.shopkeeperId,
+      );
+      expect(result).toEqual({ accessToken: 'access-token' });
+      expect(jwtProviders.signToken).toHaveBeenCalledWith(dummyId, 3600, {
+        email: signinDto.email,
+        businessId: createdBusiness.id,
       });
     });
   });

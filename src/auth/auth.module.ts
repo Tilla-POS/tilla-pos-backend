@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import jwtConfig from './config/jwt.config';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtProviders } from './providers/jwt.providers';
+import { BusinessesService } from '../businesses/businesses.service';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { JwtProviders } from './providers/jwt.providers';
     EncryptModule,
     ConfigModule.forFeature(jwtConfig),
     JwtModule.registerAsync(jwtConfig.asProvider()),
+    BusinessesService,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtProviders],

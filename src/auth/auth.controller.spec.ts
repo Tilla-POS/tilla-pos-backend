@@ -7,6 +7,7 @@ const mockAuthService = (): MockAuthService => {
   return {
     signup: jest.fn(),
     signin: jest.fn(),
+    createBusiness: jest.fn(),
   };
 };
 
@@ -28,6 +29,17 @@ describe('AuthController', () => {
     id: dummyId,
     ...signupDto,
   };
+  const createBusinessDto = {
+    name: 'John Dame',
+    slug: 'john-dame',
+    shopkeeperId: dummyId,
+    email: 'john@doe.com',
+  };
+  const mockFile = {
+    originalname: 'logo.png',
+    buffer: Buffer.from('data'),
+    mimetype: 'image/png',
+  } as Express.Multer.File;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
@@ -55,6 +67,20 @@ describe('AuthController', () => {
       authService.signin.mockResolvedValue({ token: 'token' });
       const result = await controller.signIn(signInDto);
       expect(authService.signin).toHaveBeenCalledWith(signInDto);
+      expect(result).toEqual({ token: 'token' });
+    });
+  });
+  describe('create-business', () => {
+    it('should call authService.createBusiness', async () => {
+      authService.createBusiness.mockResolvedValue({ token: 'token' });
+      const result = await controller.createBusiness(
+        createBusinessDto as any,
+        mockFile,
+      );
+      expect(authService.createBusiness).toHaveBeenCalledWith(
+        createBusinessDto,
+        mockFile,
+      );
       expect(result).toEqual({ token: 'token' });
     });
   });

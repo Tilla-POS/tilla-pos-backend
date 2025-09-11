@@ -1,10 +1,20 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signup.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SignInDto } from './dto/signin.dto';
 import { Auth } from './decorators/auth.decorator';
 import { AuthType } from './enums/auth-type.enum';
+import { AuthCreateBusinessDto } from './dto/create-business.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -24,6 +34,24 @@ export class AuthController {
   })
   signup(@Body() signupDto: SignUpDto) {
     return this.authService.signup(signupDto);
+  }
+
+  @ApiOperation({
+    summary: 'Sign up a new business',
+    description:
+      'This endpoint allows you to sign up a new business with the provided details.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'The business has been successfully signed up.',
+  })
+  @Post('/create-business')
+  @UseInterceptors(FileInterceptor('image'))
+  createBusiness(
+    @Body() authCreateBusinessDto: AuthCreateBusinessDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.authService.createBusiness(authCreateBusinessDto, file);
   }
 
   @Post('sign-in')
