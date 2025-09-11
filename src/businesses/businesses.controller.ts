@@ -17,13 +17,37 @@ import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ActiveUser } from '../auth/decorators/active-user.decorator';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('businesses')
+@ApiBearerAuth('Bearer')
 @Controller('businesses')
 @UseInterceptors(ClassSerializerInterceptor)
 export class BusinessesController {
   constructor(private readonly businessesService: BusinessesService) {}
 
   @Post()
+  @ApiOperation({
+    summary: 'Create a new business with an image',
+    description:
+      'This endpoint creates a new business and handles the image upload.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiCreatedResponse({ description: 'Business created successfully.' })
+  @ApiBadRequestResponse({ description: 'Invalid input data.' })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error occurred.',
+  })
   @UseInterceptors(FileInterceptor('image'))
   create(
     @Body() createBusinessDto: CreateBusinessDto,
@@ -38,11 +62,23 @@ export class BusinessesController {
   }
 
   @Get()
+  @ApiOperation({
+    summary: 'Retrieve all businesses',
+    description: 'This endpoint returns a list of all businesses.',
+  })
+  @ApiOkResponse({ description: 'List of businesses retrieved successfully.' })
   findAll() {
     return this.businessesService.findAll();
   }
 
   @Get(':id')
+  @ApiOperation({
+    summary: 'Retrieve a business by ID',
+    description: 'This endpoint returns a single business based on its UUID.',
+  })
+  @ApiOkResponse({ description: 'Business found and returned successfully.' })
+  @ApiNotFoundResponse({ description: 'Business not found.' })
+  @ApiBadRequestResponse({ description: 'Invalid UUID format.' })
   findOne(
     @Param(
       'id',
@@ -54,6 +90,15 @@ export class BusinessesController {
   }
 
   @Patch(':id')
+  @ApiOperation({
+    summary: 'Update a business by ID',
+    description:
+      'This endpoint updates an existing business, including its image.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiOkResponse({ description: 'Business updated successfully.' })
+  @ApiNotFoundResponse({ description: 'Business not found.' })
+  @ApiBadRequestResponse({ description: 'Invalid UUID or input data.' })
   @UseInterceptors(FileInterceptor('image'))
   update(
     @Param(
@@ -68,6 +113,14 @@ export class BusinessesController {
   }
 
   @Delete(':id')
+  @ApiOperation({
+    summary: 'Soft delete a business by ID',
+    description:
+      'This endpoint deactivates a business without permanently deleting it.',
+  })
+  @ApiOkResponse({ description: 'Business soft deleted successfully.' })
+  @ApiNotFoundResponse({ description: 'Business not found.' })
+  @ApiBadRequestResponse({ description: 'Invalid UUID format.' })
   remove(
     @Param(
       'id',
@@ -79,6 +132,14 @@ export class BusinessesController {
   }
 
   @Post('/restore/:id')
+  @ApiOperation({
+    summary: 'Restore a soft-deleted business by ID',
+    description:
+      'This endpoint restores a business that was previously soft-deleted.',
+  })
+  @ApiOkResponse({ description: 'Business restored successfully.' })
+  @ApiNotFoundResponse({ description: 'Business not found.' })
+  @ApiBadRequestResponse({ description: 'Invalid UUID format.' })
   restore(
     @Param(
       'id',

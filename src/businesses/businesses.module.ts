@@ -6,7 +6,6 @@ import { Business } from './entities/business.entity';
 import { UsersModule } from '../users/users.module';
 import { UploadsModule } from '../uploads/uploads.module';
 import { BusinessTypesModule } from '../business-types/business-types.module';
-import { CreateBusinessDto } from './dto/create-business.dto';
 
 @Module({
   imports: [
@@ -17,6 +16,6 @@ import { CreateBusinessDto } from './dto/create-business.dto';
   ],
   controllers: [BusinessesController],
   providers: [BusinessesService],
-  exports: [BusinessesService, CreateBusinessDto],
+  exports: [BusinessesService],
 })
 export class BusinessesModule {}

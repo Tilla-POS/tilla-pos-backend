@@ -17,6 +17,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PatchUserDto, PutUserDto } from './dto/update-user.dto';
 import {
+  ApiBearerAuth,
   ApiOperation,
   ApiParam,
   ApiQuery,
@@ -27,6 +28,7 @@ import {
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 @ApiTags('users')
+@ApiBearerAuth('Bearer')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

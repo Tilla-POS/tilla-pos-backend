@@ -22,6 +22,17 @@ async function bootstrap() {
     .setTermsOfService('https://example.com/terms')
     .addServer('http://localhost:3000', 'Local Development Server')
     .setVersion('1.0.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'Bearer', // This is the security definition name, used to reference it
+    )
     .build();
 
   // Initialize swagger document

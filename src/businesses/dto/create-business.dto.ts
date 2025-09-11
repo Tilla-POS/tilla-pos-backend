@@ -34,4 +34,11 @@ export class CreateBusinessDto {
   @IsNotEmpty()
   @IsUUID()
   businessTypeId: string;
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: 'Image file to upload',
+  })
+  image: any;
 }

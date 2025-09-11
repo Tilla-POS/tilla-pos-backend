@@ -22,6 +22,13 @@ export class SignInDto {
   @MinLength(5)
   email: string;
 
+  @ApiProperty({
+    example: 'P@ssword123',
+    description: 'The password of the user',
+    maxLength: 100,
+    minLength: 5,
+    required: true,
+  })
   @IsString()
   @IsNotEmpty()
   @MinLength(8)

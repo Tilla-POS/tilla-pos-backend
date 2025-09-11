@@ -12,9 +12,15 @@ import {
 import { BusinessTypesService } from './business-types.service';
 import { CreateBusinessTypeDto } from './dto/create-business-type.dto';
 import { UpdateBusinessTypeDto } from './dto/update-business-type.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Business Types')
+@ApiBearerAuth('Bearer')
 @Controller('business-types')
 export class BusinessTypesController {
   constructor(private readonly businessTypesService: BusinessTypesService) {}
