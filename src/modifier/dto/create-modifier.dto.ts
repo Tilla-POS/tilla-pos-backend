@@ -1,37 +1,25 @@
-import { IsString, IsArray, ValidateNested, IsNumber } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsNotEmpty,
+  ValidateNested,
+  ArrayMinSize,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-
-class ModifierOptionDto {
-  @ApiProperty({
-    example: 'Extra cheese',
-    description: 'The name of the modifier option.',
-  })
-  @IsString()
-  name: string;
-
-  @ApiProperty({
-    example: 20,
-    description: 'The additional value or price for this option.',
-  })
-  @IsNumber()
-  value: number;
-}
+import { Type } from 'class-transformer';
+import { CreateModifierSetDto } from './create-modifier-set.dto';
 
 export class CreateModifierDto {
-  @ApiProperty({
-    example: 'Size',
-    description: 'The name of the modifier (e.g., Size, Toppings).',
-  })
+  @ApiProperty({ description: 'Name of the modifier', example: 'Size' })
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @ApiProperty({
-    type: [ModifierOptionDto],
-    description: 'A list of options for this modifier.',
+    type: () => [CreateModifierSetDto],
+    description: 'List of modifier options',
   })
-  @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => ModifierOptionDto)
-  options: ModifierOptionDto[];
+  @Type(() => CreateModifierSetDto)
+  options: CreateModifierSetDto[];
 }

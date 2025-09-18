@@ -3,6 +3,7 @@ import { UploadsService } from './uploads.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import uploadConfig from './config/upload.config';
 import { S3Client } from '@aws-sdk/client-s3';
+import { UploadsController } from './uploads.controller';
 
 @Module({
   imports: [ConfigModule.forFeature(uploadConfig)],
@@ -25,5 +26,6 @@ import { S3Client } from '@aws-sdk/client-s3';
     },
   ],
   exports: [UploadsService],
+  controllers: [UploadsController],
 })
 export class UploadsModule {}

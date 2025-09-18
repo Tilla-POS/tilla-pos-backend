@@ -6,8 +6,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  ManyToMany,
 } from 'typeorm';
 import { ModifierSet } from './modifier-set.entity';
+import { Variant } from '../../items/entities/variant.entity';
 
 @Entity('modifier')
 export class Modifier {
@@ -19,6 +21,11 @@ export class Modifier {
 
   @OneToMany(() => ModifierSet, (set) => set.modifier, { cascade: true })
   options: ModifierSet[];
+
+  @ManyToMany(() => Variant, (variant: Variant) => variant.modifiers, {
+    onDelete: 'CASCADE',
+  })
+  variants: Variant[];
 
   @CreateDateColumn()
   createdAt: Date;

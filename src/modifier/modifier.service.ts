@@ -9,7 +9,7 @@ import { ModifierSet } from './entities/modifier-set.entity';
 import { CreateModifierDto } from './dto/create-modifier.dto';
 import { UpdateModifierDto } from './dto/update-modifier.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class ModifiersService {
@@ -38,6 +38,13 @@ export class ModifiersService {
     } catch (e) {
       throw new RequestTimeoutException('Fail to fetch modifiers', e);
     }
+  }
+
+  async findAllByIds(ids: string[]) {
+    return await this.modifierRepo.find({
+      where: { id: In(ids) },
+      relations: ['options'],
+    });
   }
 
   async findOne(id: string) {

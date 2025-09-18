@@ -19,6 +19,7 @@ import { AuthenticationGuard } from './auth/guards/access-token/authentication.g
 import { AccessTokenGuard } from './auth/guards/access-token/access-token.guard';
 import { ModifierModule } from './modifier/modifier.module';
 import { CategoryModule } from './category/category.module';
+import { ItemsModule } from './items/items.module';
 
 // Get the current NODE_ENV
 const ENV = process.env.NODE_ENV;
@@ -54,6 +55,7 @@ const ENV = process.env.NODE_ENV;
     UploadsModule,
     ModifierModule,
     CategoryModule,
+    ItemsModule,
   ],
   controllers: [AppController],
   providers: [
