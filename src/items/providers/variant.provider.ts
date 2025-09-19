@@ -2,69 +2,118 @@ import {
   Injectable,
   NotFoundException,
   RequestTimeoutException,
+  Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Variant } from '../entities/variant.entity';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Sku } from '../entities/sku.entity';
 import { ModifiersService } from 'src/modifier/modifier.service';
 import { CreateVariantDto } from '../dto/create-variant.dto';
 import { Modifier } from 'src/modifier/entities/modifier.entity';
 import { User } from 'src/users/entities/user.entity';
+import { UpdateVariantDto } from '../dto/update-variant.dto';
 
 @Injectable()
 export class VariantProvider {
+  private readonly logger = new Logger(VariantProvider.name);
+
   constructor(
     @InjectRepository(Variant)
     private readonly variantRepository: Repository<Variant>,
     @InjectRepository(Sku)
     private readonly skuRepository: Repository<Sku>,
     private readonly modifiersService: ModifiersService,
+    private readonly dataSource: DataSource,
   ) {}
   async createManyVariants(createVariantDtos: CreateVariantDto[], user: User) {
-    return await Promise.all(
-      createVariantDtos.map(async (variantDto) => {
-        // Create SKU
-        const stock = this.skuRepository.create({
-          sku: variantDto.sku.sku,
-          quantity: variantDto.sku.quantity,
-          unit: variantDto.sku.unit,
-          lowStockAlert: variantDto.sku.lowStockAlert,
-          createdBy: user,
-          updatedBy: user,
-        });
-
-        let modifiers: Modifier[] = [];
-        // Handle modifiers if they exist
-        if (variantDto.modifiers && variantDto.modifiers.length > 0) {
-          // Fetch all modifiers by their IDs
-          const fetchedModifiers = await this.modifiersService.findAllByIds(
-            variantDto.modifiers,
-          );
-          modifiers = fetchedModifiers;
-        }
-        // Create variant
-        const variant = this.variantRepository.create({
-          name: variantDto.name,
-          image: variantDto.image || '',
-          sellingPrice: variantDto.sellingPrice,
-          purchasePrice: variantDto.purchasePrice,
-          margin: variantDto.margin,
-          barcode: variantDto.barcode,
-          manufactureDate: variantDto.manufactureDate,
-          expireDate: variantDto.expireDate,
-          expireDateAlert: variantDto.expireDateAlert,
-          tax: variantDto.tax,
-          internalNote: variantDto.internalNote,
-          stock,
-          modifiers,
-          createdBy: user,
-          updatedBy: user,
-        });
-
-        return variant;
-      }),
+    this.logger.debug(
+      `Starting creation of ${createVariantDtos.length} variants for user ${user.id}`,
     );
+
+    // Start a transaction
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const variants = await Promise.all(
+        createVariantDtos.map(async (variantDto) => {
+          this.logger.debug(`Creating variant with name: ${variantDto.name}`);
+
+          // Create SKU using repository for consistency
+          const stock = this.skuRepository.create({
+            sku: variantDto.sku.sku,
+            quantity: variantDto.sku.quantity,
+            unit: variantDto.sku.unit,
+            lowStockAlert: variantDto.sku.lowStockAlert,
+            createdBy: user,
+            updatedBy: user,
+          });
+
+          let modifiers: Modifier[] = [];
+          // Handle modifiers if they exist
+          if (variantDto.modifiers?.length > 0) {
+            this.logger.debug(
+              `Fetching ${variantDto.modifiers.length} modifiers for variant ${variantDto.name}`,
+            );
+            modifiers = await this.modifiersService.findAllByIds(
+              variantDto.modifiers,
+            );
+          }
+
+          // Calculate margin if both prices are provided
+          let margin = null;
+          if (variantDto.purchasePrice && variantDto.sellingPrice) {
+            margin =
+              ((variantDto.sellingPrice - variantDto.purchasePrice) /
+                variantDto.purchasePrice) *
+              100;
+          }
+
+          // Create variant with calculated margin
+          const variant = queryRunner.manager.create(Variant, {
+            name: variantDto.name,
+            image: variantDto.image || '',
+            sellingPrice: variantDto.sellingPrice,
+            purchasePrice: variantDto.purchasePrice,
+            margin,
+            barcode: variantDto.barcode,
+            manufactureDate: variantDto.manufactureDate,
+            expireDate: variantDto.expireDate,
+            expireDateAlert: variantDto.expireDateAlert,
+            tax: variantDto.tax,
+            internalNote: variantDto.internalNote,
+            stock,
+            modifiers,
+            createdBy: user,
+            updatedBy: user,
+          });
+
+          return variant;
+        }),
+      );
+
+      // Save all variants in the transaction
+      const savedVariants = await queryRunner.manager.save(variants);
+      await queryRunner.commitTransaction();
+
+      this.logger.log(
+        `Successfully created ${variants.length} variants for user ${user.id}`,
+      );
+
+      return savedVariants;
+    } catch (error) {
+      this.logger.error(
+        `Error creating variants: ${error.message}`,
+        error.stack,
+      );
+      await queryRunner.rollbackTransaction();
+      throw new RequestTimeoutException('Failed to create variants', error);
+    } finally {
+      await queryRunner.release();
+    }
   }
   async findVariantDetailById(id: string) {
     try {
@@ -82,5 +131,149 @@ export class VariantProvider {
         error,
       );
     }
+  }
+  async updateVariantById(
+    id: string,
+    itemId: string,
+    updateVariantDto: UpdateVariantDto,
+    user: User,
+  ) {
+    this.logger.debug(
+      `Starting variant update process - Variant: ${id}, Item: ${itemId}, User: ${user.id}`,
+    );
+
+    // Start a transaction
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Find variant with relationships and validate business access
+      const variant = await queryRunner.manager.findOne(Variant, {
+        where: { id, item: { id: itemId } },
+        relations: ['stock', 'modifiers', 'item.business'],
+      });
+
+      if (!variant) {
+        throw new NotFoundException(`Variant with ID ${id} not found.`);
+      }
+
+      // Business access validation
+      if (variant.item.business.id !== user.business.id) {
+        throw new ForbiddenException(
+          'You do not have access to update this variant',
+        );
+      }
+
+      this.logger.debug(`Updating basic fields for variant ${id}`);
+      // Update basic fields if provided using object spread for cleaner code
+      const basicUpdates = {
+        ...(updateVariantDto.name && { name: updateVariantDto.name }),
+        ...(updateVariantDto.image && { image: updateVariantDto.image }),
+        ...(updateVariantDto.sellingPrice && {
+          sellingPrice: updateVariantDto.sellingPrice,
+        }),
+        ...(updateVariantDto.purchasePrice && {
+          purchasePrice: updateVariantDto.purchasePrice,
+        }),
+        ...(updateVariantDto.barcode && { barcode: updateVariantDto.barcode }),
+        ...(updateVariantDto.manufactureDate && {
+          manufactureDate: updateVariantDto.manufactureDate,
+        }),
+        ...(updateVariantDto.expireDate && {
+          expireDate: updateVariantDto.expireDate,
+        }),
+        ...(updateVariantDto.expireDateAlert && {
+          expireDateAlert: updateVariantDto.expireDateAlert,
+        }),
+        ...(updateVariantDto.tax && { tax: updateVariantDto.tax }),
+        ...(updateVariantDto.internalNote && {
+          internalNote: updateVariantDto.internalNote,
+        }),
+      };
+
+      Object.assign(variant, basicUpdates);
+
+      // Calculate margin if both prices are available
+      if (updateVariantDto.sellingPrice && updateVariantDto.purchasePrice) {
+        this.logger.debug(`Recalculating margin for variant ${id}`);
+        variant.margin =
+          ((updateVariantDto.sellingPrice - updateVariantDto.purchasePrice) /
+            updateVariantDto.purchasePrice) *
+          100;
+      }
+
+      // Update SKU information if provided
+      if (updateVariantDto.sku) {
+        this.logger.debug(`Updating SKU information for variant ${id}`);
+        if (!variant.stock) {
+          variant.stock = this.skuRepository.create({
+            sku: updateVariantDto.sku.sku,
+            quantity: updateVariantDto.sku.quantity,
+            unit: updateVariantDto.sku.unit,
+            lowStockAlert: updateVariantDto.sku.lowStockAlert,
+            createdBy: user,
+            updatedBy: user,
+          });
+        } else {
+          // Update existing SKU using object spread
+          Object.assign(variant.stock, {
+            ...updateVariantDto.sku,
+            updatedBy: user,
+          });
+        }
+      }
+
+      // Optimized modifier updates - only update if there are changes
+      if (updateVariantDto.modifiers?.length > 0) {
+        this.logger.debug(`Updating modifiers for variant ${id}`);
+        const currentModifierIds = variant.modifiers.map((m) => m.id);
+        const requestedModifierIds = updateVariantDto.modifiers;
+
+        // Only update if the modifier lists are different
+        if (!this.areArraysEqual(currentModifierIds, requestedModifierIds)) {
+          const fetchedModifiers =
+            await this.modifiersService.findAllByIds(requestedModifierIds);
+          variant.modifiers = fetchedModifiers;
+        }
+      }
+
+      // Update tracking information
+      variant.updatedBy = user;
+
+      // Save all changes within the transaction
+      const savedVariant = await queryRunner.manager.save(Variant, variant);
+      await queryRunner.commitTransaction();
+
+      this.logger.log(`Successfully updated variant ${id} by user ${user.id}`);
+      return savedVariant;
+    } catch (error) {
+      this.logger.error(
+        `Error updating variant ${id}: ${error.message}`,
+        error.stack,
+      );
+      await queryRunner.rollbackTransaction();
+
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+      throw new RequestTimeoutException(
+        `Failed to update variant with ID ${id}`,
+        error,
+      );
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // Helper method to compare arrays
+  private areArraysEqual(arr1: string[], arr2: string[]): boolean {
+    if (arr1.length !== arr2.length) return false;
+    const sortedArr1 = [...arr1].sort();
+    const sortedArr2 = [...arr2].sort();
+    return sortedArr1.every((value, index) => value === sortedArr2[index]);
   }
 }

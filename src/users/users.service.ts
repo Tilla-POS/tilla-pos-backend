@@ -54,7 +54,10 @@ export class UsersService {
 
   async findOne(id: string) {
     try {
-      return await this.userRepository.findOne({ where: { id: id } });
+      return await this.userRepository.findOne({
+        where: { id: id },
+        relations: ['business'],
+      });
     } catch (error) {
       throw new RequestTimeoutException(
         `Failed to retrieve user with ID ${id}. Please try again later.`,

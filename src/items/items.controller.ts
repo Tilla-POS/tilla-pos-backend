@@ -25,6 +25,7 @@ import {
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { UpdateVariantDto } from './dto/update-variant.dto';
 
 @ApiTags('items')
 @ApiBearerAuth('Bearer')
@@ -124,5 +125,39 @@ export class ItemsController {
     @Body() updateItemDto: UpdateItemDto,
   ) {
     return this.itemsService.updateItemById(id, updateItemDto);
+  }
+
+  @Patch(':id/variant/:variantId')
+  @ApiOperation({
+    summary: 'Update a variant by ID',
+    description: 'This endpoint updates an existing variant based on its UUID.',
+  })
+  @ApiOkResponse({ description: 'Variant updated successfully.' })
+  @ApiNotFoundResponse({ description: 'Variant not found.' })
+  @ApiBadRequestResponse({ description: 'Invalid UUID format.' })
+  updateVariant(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+    @Param(
+      'variantId',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    variantId: string,
+    @Body() updateItemDto: UpdateVariantDto,
+    @ActiveUser(
+      'sub',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    userId: string,
+  ) {
+    return this.itemsService.updateVariantById(
+      id,
+      variantId,
+      updateItemDto,
+      userId,
+    );
   }
 }

@@ -15,6 +15,7 @@ import { BusinessesService } from '../businesses/businesses.service';
 import { CategoriesService } from '../category/category.service';
 import { VariantProvider } from './providers/variant.provider';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { UpdateVariantDto } from './dto/update-variant.dto';
 
 @Injectable()
 export class ItemsService {
@@ -214,5 +215,23 @@ export class ItemsService {
         error,
       );
     }
+  }
+
+  async updateVariantById(
+    id: string,
+    variantId: string,
+    updateVariantDto: UpdateVariantDto,
+    userId: string,
+  ) {
+    const user = await this.userService.findOne(userId);
+    if (!user) {
+      throw new BadRequestException(`User with ID ${userId} not found.`);
+    }
+    return await this.variantProvider.updateVariantById(
+      variantId,
+      id,
+      updateVariantDto,
+      user,
+    );
   }
 }
