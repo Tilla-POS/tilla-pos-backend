@@ -16,6 +16,8 @@ import { CategoriesService } from '../category/category.service';
 import { VariantProvider } from './providers/variant.provider';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { UpdateVariantDto } from './dto/update-variant.dto';
+import { Variant } from './entities/variant.entity';
+import { CreateVariantDto } from './dto/create-variant.dto';
 
 @Injectable()
 export class ItemsService {
@@ -37,7 +39,7 @@ export class ItemsService {
     // Validate user and business
     const user = await this.userService.findOne(userId);
     if (!user) {
-      throw new BadRequestException(`User with ID ${userId} not found.`);
+      throw new NotFoundException(`User with ID ${userId} not found.`);
     }
 
     const business = await this.businessService.findOne(businessId);
@@ -233,5 +235,40 @@ export class ItemsService {
       updateVariantDto,
       user,
     );
+  }
+
+  async addVariantToItem(
+    id: string,
+    createVariantDto: CreateVariantDto,
+    userId: string,
+  ) {
+    // First check if item exists without relations
+    const itemExists = await this.itemRepository.findOneBy({ id });
+    if (!itemExists) {
+      throw new NotFoundException(`Item with ID ${id} not found.`);
+    }
+    // Now fetch item with variants relation
+    const item = await this.itemRepository.findOne({
+      where: { id },
+      relations: ['variants'],
+    });
+    const user = await this.userService.findOne(userId);
+    if (!user) {
+      throw new BadRequestException(`User with ID ${userId} not found.`);
+    }
+    const variant: Variant = await this.variantProvider.createVariant(
+      createVariantDto,
+      user,
+    );
+    item.variants = [...(item.variants || []), variant];
+    try {
+      return await this.itemRepository.save(item);
+    } catch (error) {
+      this.logger.error(`Error adding variant: ${error.message}`, error.stack);
+      throw new RequestTimeoutException(
+        `Failed to add variant to item with ID ${id}.`,
+        error,
+      );
+    }
   }
 }

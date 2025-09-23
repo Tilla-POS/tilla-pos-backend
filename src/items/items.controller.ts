@@ -26,6 +26,7 @@ import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { UpdateVariantDto } from './dto/update-variant.dto';
+import { CreateVariantDto } from './dto/create-variant.dto';
 
 @ApiTags('items')
 @ApiBearerAuth('Bearer')
@@ -125,6 +126,35 @@ export class ItemsController {
     @Body() updateItemDto: UpdateItemDto,
   ) {
     return this.itemsService.updateItemById(id, updateItemDto);
+  }
+
+  @Post(':id/variants')
+  @ApiOperation({
+    summary: 'Add a new variant to an existing item',
+    description:
+      'This endpoint adds a new variant to an existing item based on the item UUID.',
+  })
+  @ApiCreatedResponse({ description: 'Variant added successfully.' })
+  @ApiNotFoundResponse({ description: 'Item not found.' })
+  @ApiBadRequestResponse({ description: 'Invalid UUID format.' })
+  @ApiConsumes('application/json')
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error occurred.',
+  })
+  addVariant(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+    @Body() createVariantDto: CreateVariantDto,
+    @ActiveUser(
+      'sub',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    userId: string,
+  ) {
+    return this.itemsService.addVariantToItem(id, createVariantDto, userId);
   }
 
   @Patch(':id/variant/:variantId')

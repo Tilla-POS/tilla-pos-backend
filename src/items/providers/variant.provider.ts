@@ -27,6 +27,75 @@ export class VariantProvider {
     private readonly modifiersService: ModifiersService,
     private readonly dataSource: DataSource,
   ) {}
+  async createVariant(createVariantDto: CreateVariantDto, user: User) {
+    this.logger.debug(
+      `Starting creation of variant ${createVariantDto.name} for user ${user.id}`,
+    );
+
+    try {
+      const stock = this.skuRepository.create({
+        sku: createVariantDto.sku.sku,
+        quantity: createVariantDto.sku.quantity,
+        unit: createVariantDto.sku.unit,
+        lowStockAlert: createVariantDto.sku.lowStockAlert,
+        createdBy: user,
+        updatedBy: user,
+      });
+
+      let modifiers: Modifier[] = [];
+      // Handle modifiers if they exist
+      if (createVariantDto.modifiers?.length > 0) {
+        this.logger.debug(
+          `Fetching ${createVariantDto.modifiers.length} modifiers for variant ${createVariantDto.name}`,
+        );
+        modifiers = await this.modifiersService.findAllByIds(
+          createVariantDto.modifiers,
+        );
+      }
+
+      // Calculate margin if both prices are provided
+      let margin = null;
+      if (createVariantDto.purchasePrice && createVariantDto.sellingPrice) {
+        margin =
+          ((createVariantDto.sellingPrice - createVariantDto.purchasePrice) /
+            createVariantDto.purchasePrice) *
+          100;
+      }
+
+      // Create variant with calculated margin
+      const variant = this.variantRepository.create({
+        name: createVariantDto.name,
+        image: createVariantDto.image || '',
+        sellingPrice: createVariantDto.sellingPrice,
+        purchasePrice: createVariantDto.purchasePrice,
+        margin,
+        barcode: createVariantDto.barcode,
+        manufactureDate: createVariantDto.manufactureDate,
+        expireDate: createVariantDto.expireDate,
+        expireDateAlert: createVariantDto.expireDateAlert,
+        tax: createVariantDto.tax,
+        internalNote: createVariantDto.internalNote,
+        stock,
+        modifiers,
+        createdBy: user,
+        updatedBy: user,
+      });
+
+      await this.variantRepository.save(variant);
+      this.logger.log(
+        `Successfully created variant ${createVariantDto.name} for user ${user.id}`,
+      );
+
+      return variant;
+    } catch (error) {
+      this.logger.error(
+        `Error creating variant ${createVariantDto.name}: ${error.message}`,
+        error.stack,
+      );
+      throw new RequestTimeoutException('Failed to create variant', error);
+    }
+  }
+
   async createManyVariants(createVariantDtos: CreateVariantDto[], user: User) {
     this.logger.debug(
       `Starting creation of ${createVariantDtos.length} variants for user ${user.id}`,
