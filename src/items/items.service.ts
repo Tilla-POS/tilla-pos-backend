@@ -282,4 +282,45 @@ export class ItemsService {
     // Delete the variant using the variant provider
     return await this.variantProvider.deleteVariantById(variantId, userId);
   }
+
+  async deleteItemById(id: string, userId: string) {
+    // Find the item with its creator information
+    let item: Item;
+    try {
+      item = await this.itemRepository.findOne({
+        where: { id },
+        relations: ['createdBy'],
+      });
+    } catch (error) {
+      this.logger.error(`Failed to fetch item with ID ${id}`, error.stack);
+      throw new RequestTimeoutException(
+        `Failed to fetch item with ID ${id}.`,
+        error,
+      );
+    }
+
+    if (!item) {
+      throw new NotFoundException(`Item with ID ${id} not found.`);
+    }
+
+    // Check if the user has permission to delete this item
+    if (item.createdBy.id !== userId) {
+      throw new BadRequestException(
+        'You do not have permission to delete this item.',
+      );
+    }
+
+    try {
+      // Soft delete the item (TypeORM will handle the soft delete due to @DeleteDateColumn)
+      await this.itemRepository.softDelete(id);
+      this.logger.log(`Item ${id} deleted successfully by user ${userId}`);
+      return { message: 'Item deleted successfully.' };
+    } catch (error) {
+      this.logger.error(`Failed to delete item with ID ${id}`, error.stack);
+      throw new RequestTimeoutException(
+        'Unable to delete item at the moment. Please try again later.',
+        error,
+      );
+    }
+  }
 }

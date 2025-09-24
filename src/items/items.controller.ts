@@ -219,4 +219,29 @@ export class ItemsController {
   ) {
     return this.itemsService.deleteVariantById(id, variantId, userId);
   }
+
+  @Delete(':id')
+  @ApiOperation({
+    summary: 'Delete an item by ID',
+    description: 'This endpoint deletes an existing item based on its UUID.',
+  })
+  @ApiOkResponse({ description: 'Item deleted successfully.' })
+  @ApiNotFoundResponse({ description: 'Item not found.' })
+  @ApiBadRequestResponse({
+    description: 'Invalid UUID format or insufficient permissions.',
+  })
+  deleteItem(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+    @ActiveUser(
+      'sub',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    userId: string,
+  ) {
+    return this.itemsService.deleteItemById(id, userId);
+  }
 }
