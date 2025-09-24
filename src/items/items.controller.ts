@@ -9,6 +9,7 @@ import {
   ClassSerializerInterceptor,
   UseInterceptors,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { ActiveUser } from '../auth/decorators/active-user.decorator';
 import {
@@ -189,5 +190,33 @@ export class ItemsController {
       updateItemDto,
       userId,
     );
+  }
+
+  @Delete(':id/variant/:variantId')
+  @ApiOperation({
+    summary: 'Delete a variant by ID',
+    description: 'This endpoint deletes an existing variant based on its UUID.',
+  })
+  @ApiOkResponse({ description: 'Variant deleted successfully.' })
+  @ApiNotFoundResponse({ description: 'Variant not found.' })
+  @ApiBadRequestResponse({ description: 'Invalid UUID format.' })
+  deleteVariant(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+    @Param(
+      'variantId',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    variantId: string,
+    @ActiveUser(
+      'sub',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    userId: string,
+  ) {
+    return this.itemsService.deleteVariantById(id, variantId, userId);
   }
 }

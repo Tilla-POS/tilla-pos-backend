@@ -338,6 +338,58 @@ export class VariantProvider {
     }
   }
 
+  async deleteVariantById(variantId: string, userId: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Find the variant first
+      const variant = await queryRunner.manager.findOne(Variant, {
+        where: { id: variantId },
+        relations: ['item', 'createdBy', 'stock'],
+      });
+
+      if (!variant) {
+        throw new NotFoundException(`Variant with ID ${variantId} not found.`);
+      }
+
+      // Check if the user has permission to delete this variant
+      if (variant.createdBy.id !== userId) {
+        throw new ForbiddenException(
+          'You do not have permission to delete this variant.',
+        );
+      }
+
+      // Soft delete the variant (TypeORM will handle the soft delete)
+      await queryRunner.manager.softDelete(Variant, variantId);
+
+      await queryRunner.commitTransaction();
+
+      this.logger.log(
+        `Variant ${variantId} deleted successfully by user ${userId}`,
+      );
+
+      return { message: 'Variant deleted successfully.' };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(`Failed to delete variant ${variantId}`, error.stack);
+
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+
+      throw new RequestTimeoutException(
+        'Unable to delete variant at the moment. Please try again later.',
+      );
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   // Helper method to compare arrays
   private areArraysEqual(arr1: string[], arr2: string[]): boolean {
     if (arr1.length !== arr2.length) return false;

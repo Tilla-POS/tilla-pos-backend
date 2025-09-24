@@ -271,4 +271,15 @@ export class ItemsService {
       );
     }
   }
+
+  async deleteVariantById(itemId: string, variantId: string, userId: string) {
+    // First verify that the item exists
+    const item = await this.findOne(itemId);
+    if (!item) {
+      throw new NotFoundException(`Item with ID ${itemId} not found.`);
+    }
+
+    // Delete the variant using the variant provider
+    return await this.variantProvider.deleteVariantById(variantId, userId);
+  }
 }
