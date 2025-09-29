@@ -1,34 +1,95 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  ParseUUIDPipe,
+  UseInterceptors,
+  ClassSerializerInterceptor,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiCreatedResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiInternalServerErrorResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { SaleService } from './sale.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
-import { UpdateSaleDto } from './dto/update-sale.dto';
+import { ActiveUser } from '../auth/decorators/active-user.decorator';
+import { ActiveUser as ActiveUserInterface } from 'src/auth/interfaces/active-user.inteface';
 
-@Controller('sale')
+@ApiTags('sales')
+@ApiBearerAuth('Bearer')
+@Controller('sales')
+@UseInterceptors(ClassSerializerInterceptor)
 export class SaleController {
   constructor(private readonly saleService: SaleService) {}
 
   @Post()
-  create(@Body() createSaleDto: CreateSaleDto) {
-    return this.saleService.create(createSaleDto);
+  @ApiOperation({
+    summary: 'Create a new sale',
+    description:
+      'Creates a new sale record with line items and optional customer details.',
+  })
+  @ApiCreatedResponse({ description: 'Sale created successfully.' })
+  @ApiBadRequestResponse({ description: 'Invalid input data.' })
+  @ApiNotFoundResponse({
+    description: 'User, business, variant, or modifier set not found.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error occurred.',
+  })
+  create(
+    @Body() createSaleDto: CreateSaleDto,
+    @ActiveUser() user: ActiveUserInterface,
+  ) {
+    return this.saleService.create(createSaleDto, user);
   }
 
   @Get()
-  findAll() {
-    return this.saleService.findAll();
+  @ApiOperation({
+    summary: 'Get all sales',
+    description:
+      "Fetches a list of all sales records for the authenticated user's business.",
+  })
+  @ApiOkResponse({ description: 'Sales retrieved successfully.' })
+  findAll(@ActiveUser() user: ActiveUserInterface) {
+    return this.saleService.findAll(user);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.saleService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSaleDto: UpdateSaleDto) {
-    return this.saleService.update(+id, updateSaleDto);
+  @ApiOperation({
+    summary: 'Get sale by ID',
+    description: 'Fetches details of a specific sale by its ID.',
+  })
+  @ApiOkResponse({ description: 'Sale found and returned successfully.' })
+  @ApiNotFoundResponse({ description: 'Sale not found.' })
+  @ApiBadRequestResponse({ description: 'Invalid UUID format.' })
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @ActiveUser() user: ActiveUserInterface,
+  ) {
+    return this.saleService.findOne(id, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.saleService.remove(+id);
+  @ApiOperation({
+    summary: 'Delete sale by ID',
+    description: 'Deletes a specific sale by its ID.',
+  })
+  @ApiOkResponse({ description: 'Sale deleted successfully.' })
+  @ApiNotFoundResponse({ description: 'Sale not found.' })
+  @ApiBadRequestResponse({ description: 'Invalid UUID format.' })
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @ActiveUser() user: ActiveUserInterface,
+  ) {
+    return this.saleService.remove(id, user);
   }
 }

@@ -21,5 +21,6 @@ import { VariantProvider } from './providers/variant.provider';
   ],
   controllers: [ItemsController],
   providers: [ItemsService, VariantProvider],
+  exports: [ItemsService],
 })
 export class ItemsModule {}

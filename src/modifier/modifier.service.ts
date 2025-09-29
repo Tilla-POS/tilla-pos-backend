@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
   RequestTimeoutException,
+  Logger,
 } from '@nestjs/common';
 import { Modifier } from './entities/modifier.entity';
 import { ModifierSet } from './entities/modifier-set.entity';
@@ -13,6 +14,8 @@ import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class ModifiersService {
+  private readonly logger = new Logger(ModifiersService.name);
+
   constructor(
     @InjectRepository(Modifier)
     private readonly modifierRepo: Repository<Modifier>,
@@ -99,6 +102,24 @@ export class ModifiersService {
       return await this.modifierRepo.restore(id);
     } catch (e) {
       throw new RequestTimeoutException('Fail to restore the modifier', e);
+    }
+  }
+
+  async findSetById(id: string): Promise<ModifierSet | null> {
+    this.logger.debug(`Finding modifier set with ID: ${id}`);
+
+    try {
+      const modifierSet = await this.modifierSetRepo.findOne({
+        where: { id, deletedAt: null },
+      });
+
+      return modifierSet || null;
+    } catch (error) {
+      this.logger.error(
+        `Failed to find modifier set with ID: ${id}`,
+        error.stack,
+      );
+      return null;
     }
   }
 }
