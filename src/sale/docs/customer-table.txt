@@ -1,0 +1,13 @@
+table customer {
+  id uniqueidentifier PK unique
+  name varchar
+  phone varchar
+  email varchar
+  business uniqueidentifier
+  createdAt datetime
+  updatedAt datetime
+  deletedAt datetime
+  createdBy uniqueidentifier
+  updatedBy uniqueidentifier
+  deletedBy uniqueidentifier
+}

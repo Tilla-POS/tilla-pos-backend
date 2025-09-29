@@ -201,6 +201,57 @@ export class VariantProvider {
       );
     }
   }
+
+  async findVariantsByItemId(itemId: string) {
+    try {
+      const variants = await this.variantRepository.find({
+        where: { item: { id: itemId } },
+        relations: ['stock', 'modifiers', 'modifiers.options'],
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          sellingPrice: true,
+          purchasePrice: true,
+          margin: true,
+          barcode: true,
+          manufactureDate: true,
+          expireDate: true,
+          expireDateAlert: true,
+          tax: true,
+          internalNote: true,
+          createdAt: true,
+          updatedAt: true,
+          stock: {
+            id: true,
+            sku: true,
+            quantity: true,
+            unit: true,
+            lowStockAlert: true,
+          },
+          modifiers: {
+            id: true,
+            name: true,
+            options: {
+              id: true,
+              name: true,
+              value: true,
+            },
+          },
+        },
+      });
+      return variants;
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch variants for item ${itemId}`,
+        error.stack,
+      );
+      throw new RequestTimeoutException(
+        `Failed to fetch variants for item ${itemId}`,
+        error,
+      );
+    }
+  }
   async updateVariantById(
     id: string,
     itemId: string,

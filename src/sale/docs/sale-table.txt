@@ -1,0 +1,21 @@
+table sale {
+  id uniqueidentifier PK unique
+  receiptId uniqueidentifier unique
+  line_items uniqueidentifier
+  discount float
+  tax float
+  subTotal float
+  grandTotal float
+  paymentMethod payment_methods [default: 'CASH']
+  receiptNote varchar
+  cashReceive float
+  change float
+  customer uniqueidentifier
+  business uniqueidentifier
+  createdAt datetime
+  updatedAt datetime
+  deletedAt datetime
+  createdBy uniqueidentifier
+  updatedBy uniqueidentifier
+  deletedBy uniqueidentifier
+}

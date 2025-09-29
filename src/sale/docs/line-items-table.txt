@@ -1,0 +1,14 @@
+table line_items {
+  id uniqueidentifier PK unique
+  variant uniqueidentifier
+  price float
+  quantity float
+  total float
+  modifierSet uniqueidentifier [default: null]
+  createdAt datetime
+  updatedAt datetime
+  deletedAt datetime
+  createdBy uniqueidentifier
+  updatedBy uniqueidentifier
+  deletedBy uniqueidentifier
+}

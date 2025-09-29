@@ -92,6 +92,24 @@ export class ItemsController {
     return this.itemsService.findOne(id);
   }
 
+  @Get(':id/variants')
+  @ApiOperation({
+    summary: 'Get all variants by item ID',
+    description: 'Fetches all variants for a specific item.',
+  })
+  @ApiOkResponse({ description: 'Variants retrieved successfully.' })
+  @ApiNotFoundResponse({ description: 'Item not found.' })
+  @ApiBadRequestResponse({ description: 'Invalid UUID format.' })
+  findVariantsByItemId(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
+    return this.itemsService.findVariantsByItemId(id);
+  }
+
   @Get('variant/:id')
   @ApiOperation({
     summary: 'Retrieve a variant by ID',

@@ -1,0 +1,175 @@
+{
+  "title": "API endpoints for cashier operations",
+  "endpoints": [
+    {
+      "title": "Get All Items",
+      "method": "GET",
+      "url": "/api/v1/items",
+      "description": "Fetches a list of all items available in the inventory.",
+      "queryParameters": [
+        {
+          "name": "search",
+          "type": "string",
+          "description": "Search term to filter items by name."
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "description": "Filter items by category."
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "description": "Limit the number of items returned."
+        },
+        {
+          "name": "page",
+          "type": "number",
+          "description": "Page number for pagination."
+        }
+      ]
+    },
+    {
+      "title": "Get All Variants by Item ID",
+      "method": "GET",
+      "url": "/api/v1/items/:itemId/variants",
+      "description": "Fetches all variants for a specific item.",
+      "queryParameters": []
+    },
+    {
+      "title": "Create a new sale",
+      "method": "POST",
+      "url": "/api/v1/sales",
+      "description": "Creates a new sale record.",
+      "bodyParameters": [
+        {
+          "name": "lineItems",
+          "type": "array",
+          "description": "List of line items in the sale.",
+          "items": {
+            "type": "object",
+            "properties": [
+              {
+                "name": "variantId",
+                "type": "string",
+                "description": "ID of the variant of the item being sold.",
+                "required": true
+              },
+              {
+                "name": "quantity",
+                "type": "number",
+                "description": "Quantity of the item being sold.",
+                "required": true
+              },
+              {
+                "name": "price",
+                "type": "number",
+                "description": "Price per unit of the item.",
+                "required": true
+              },
+              {
+                "name": "total",
+                "type": "number",
+                "description": "Total price for this line item (quantity * price).",
+                "required": true
+              },
+              {
+                "name": "modifierSet",
+                "type": "string",
+                "description": "Modifier set applied to the item, if any.",
+                "required": false
+              }
+            ]
+          },
+          "required": true
+        },
+        {
+          "name": "customer",
+          "type": "object",
+          "description": "Customer details for the sale.",
+          "properties": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "Name of the customer.",
+              "required": true
+            },
+            {
+              "name": "email",
+              "type": "string",
+              "description": "Email address of the customer.",
+              "required": true
+            },
+            {
+              "name": "phone",
+              "type": "string",
+              "description": "Phone number of the customer.",
+              "required": false
+            }
+          ],
+          "required": false
+        },
+        {
+          "name": "discount",
+          "type": "number",
+          "description": "Discount applied to the sale.",
+          "required": false
+        },
+        {
+          "name": "tax",
+          "type": "number",
+          "description": "Tax applied to the sale.",
+          "required": false
+        },
+        {
+          "name": "subtotal",
+          "type": "number",
+          "description": "Subtotal amount before tax and discount.",
+          "required": true
+        },
+        {
+          "name": "grandTotal",
+          "type": "number",
+          "description": "Total amount after tax and discount.",
+          "required": true
+        },
+        {
+          "name": "paymentMethod",
+          "type": "string",
+          "description": "Payment method used for the sale.",
+          "required": false
+        },
+        {
+          "name": "receiptNote",
+          "type": "string",
+          "description": "Additional notes for the sale.",
+          "required": false
+        },
+        {
+          "name": "cashReceived",
+          "type": "number",
+          "description": "Amount of cash received from the customer.",
+          "required": true
+        },
+        {
+          "name": "change",
+          "type": "number",
+          "description": "Change due to the customer.",
+          "required": false
+        }
+      ]
+    },
+    {
+      "title": "Get all sales",
+      "method": "GET",
+      "url": "/api/v1/sales",
+      "description": "Fetches a list of all sales records."
+    },
+    {
+      "title": "Get sale by ID",
+      "method": "GET",
+      "url": "/api/v1/sales/:saleId",
+      "description": "Fetches details of a specific sale by its ID."
+    }
+  ]
+}

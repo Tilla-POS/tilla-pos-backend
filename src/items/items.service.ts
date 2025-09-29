@@ -173,6 +173,17 @@ export class ItemsService {
     return await this.variantProvider.findVariantDetailById(id);
   }
 
+  async findVariantsByItemId(itemId: string) {
+    // First verify that the item exists
+    const item = await this.findOne(itemId);
+    if (!item) {
+      throw new NotFoundException(`Item with ID ${itemId} not found.`);
+    }
+
+    // Get all variants for the item
+    return await this.variantProvider.findVariantsByItemId(itemId);
+  }
+
   async updateItemById(id: string, updateItemDto: UpdateItemDto) {
     let item: Item;
     try {
