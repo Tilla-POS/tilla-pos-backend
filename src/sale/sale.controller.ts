@@ -22,7 +22,7 @@ import {
 import { SaleService } from './sale.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { ActiveUser } from '../auth/decorators/active-user.decorator';
-import { ActiveUser as ActiveUserInterface } from 'src/auth/interfaces/active-user.inteface';
+import { ActiveUser as ActiveUserInterface } from '../auth/interfaces/active-user.inteface';
 
 @ApiTags('sales')
 @ApiBearerAuth('Bearer')

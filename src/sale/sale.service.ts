@@ -212,7 +212,13 @@ export class SaleService {
           business: { id: user.businessId },
           deletedAt: null,
         },
-        relations: ['lineItems', 'lineItems.variant', 'customer', 'createdBy'],
+        select: {
+          id: true,
+          receiptId: true,
+          grandTotal: true,
+          createdAt: true,
+          paymentMethod: true,
+        },
         order: { createdAt: 'DESC' },
       });
 
