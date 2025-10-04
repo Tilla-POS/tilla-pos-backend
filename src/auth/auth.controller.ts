@@ -15,6 +15,8 @@ import { Auth } from './decorators/auth.decorator';
 import { AuthType } from './enums/auth-type.enum';
 import { AuthCreateBusinessDto } from './dto/create-business.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { AuthResponseDto } from './dto/auth-response.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -44,13 +46,14 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'The business has been successfully signed up.',
+    type: AuthResponseDto,
   })
   @Post('/create-business')
   @UseInterceptors(FileInterceptor('image'))
   createBusiness(
     @Body() authCreateBusinessDto: AuthCreateBusinessDto,
     @UploadedFile() file: Express.Multer.File,
-  ) {
+  ): Promise<AuthResponseDto> {
     return this.authService.createBusiness(authCreateBusinessDto, file);
   }
 
@@ -64,8 +67,31 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'The user has been successfully signed in.',
+    type: AuthResponseDto,
   })
-  signIn(@Body() signInDto: SignInDto) {
+  signIn(@Body() signInDto: SignInDto): Promise<AuthResponseDto> {
     return this.authService.signin(signInDto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Refresh access token',
+    description:
+      'This endpoint allows you to refresh an access token using a valid refresh token.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Tokens have been successfully refreshed.',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid refresh token.',
+  })
+  refreshToken(
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ): Promise<AuthResponseDto> {
+    return this.authService.refreshToken(refreshTokenDto);
   }
 }

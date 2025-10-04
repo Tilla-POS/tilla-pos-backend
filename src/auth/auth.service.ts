@@ -6,6 +6,8 @@ import { Hashing } from '../common/encrypt/provider/hashing';
 import { JwtProviders } from './providers/jwt.providers';
 import { AuthCreateBusinessDto } from './dto/create-business.dto';
 import { BusinessesService } from '../businesses/businesses.service';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { AuthResponseDto } from './dto/auth-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -23,24 +25,22 @@ export class AuthService {
   async createBusiness(
     authCreateBusinessDto: AuthCreateBusinessDto,
     file: Express.Multer.File,
-  ) {
+  ): Promise<AuthResponseDto> {
     const business = await this.businessService.create(
       authCreateBusinessDto,
       file,
       authCreateBusinessDto.shopkeeperId,
     );
-    const token = await this.jwtProvider.signToken(
+    return await this.jwtProvider.generateTokens(
       authCreateBusinessDto.shopkeeperId,
-      3600,
       {
         email: authCreateBusinessDto.email,
         businessId: business.id,
       },
     );
-    return { accessToken: token };
   }
 
-  async signin(signinDto: SignInDto) {
+  async signin(signinDto: SignInDto): Promise<AuthResponseDto> {
     const user = await this.usersService.findByEmail(signinDto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -52,10 +52,33 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const token = await this.jwtProvider.signToken(user.id, 3600, {
+    return await this.jwtProvider.generateTokens(user.id, {
       email: user.email,
       businessId: !!user.business ? user.business.id : null,
     });
-    return { accessToken: token };
+  }
+
+  async refreshToken(
+    refreshTokenDto: RefreshTokenDto,
+  ): Promise<AuthResponseDto> {
+    try {
+      const payload = await this.jwtProvider.verifyRefreshToken(
+        refreshTokenDto.refreshToken,
+      );
+
+      // Verify user still exists
+      const user = await this.usersService.findOne(payload.sub);
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      // Generate new tokens
+      return await this.jwtProvider.generateTokens(user.id, {
+        email: user.email,
+        businessId: !!user.business ? user.business.id : null,
+      });
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 }
