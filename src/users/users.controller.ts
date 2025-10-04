@@ -24,6 +24,9 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { ActiveUser } from '../auth/decorators/active-user.decorator';
+import { ActiveUser as ActiveUserInterface } from '../auth/interfaces/active-user.inteface';
+import { CurrentUserResponseDto } from './dto/current-user-response.dto';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
@@ -57,6 +60,27 @@ export class UsersController {
   })
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @Get('me')
+  @ApiOperation({
+    summary: 'Get current authenticated user',
+    description:
+      'This endpoint returns the details of the currently authenticated user.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The current user has been successfully retrieved.',
+    type: CurrentUserResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing authentication token.',
+  })
+  getCurrentUser(
+    @ActiveUser() user: ActiveUserInterface,
+  ): Promise<CurrentUserResponseDto> {
+    return this.usersService.getCurrentUser(user);
   }
 
   @Get(':id')

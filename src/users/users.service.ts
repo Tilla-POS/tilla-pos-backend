@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Hashing } from '../common/encrypt/provider/hashing';
+import { ActiveUser as ActiveUserInterface } from '../auth/interfaces/active-user.inteface';
 
 @Injectable()
 export class UsersService {
@@ -75,6 +76,29 @@ export class UsersService {
     } catch (error) {
       throw new RequestTimeoutException(
         `Failed to retrieve user with email ${email}. Please try again later.`,
+        error,
+      );
+    }
+  }
+
+  async getCurrentUser(activeUser: ActiveUserInterface): Promise<User> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id: activeUser.sub },
+        relations: ['business'],
+      });
+
+      if (!user) {
+        throw new BadRequestException('User not found');
+      }
+
+      return user;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new RequestTimeoutException(
+        'Failed to retrieve current user. Please try again later.',
         error,
       );
     }

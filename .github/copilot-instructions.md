@@ -14,6 +14,7 @@ Tilla POS is a point-of-sale system backend built with NestJS. It provides APIs 
 
 ### Key Modules
 - **Auth**: Handles authentication, JWT tokens, and guards
+- **Users**: Manages user accounts and profiles
 - **Items**: Manages products with variants and SKUs
 - **Business**: Manages business entities
 - **Category**: Organizes items into categories
