@@ -8,6 +8,7 @@ import jwtConfig from './config/jwt.config';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtProviders } from './providers/jwt.providers';
 import { BusinessesModule } from '../businesses/businesses.module';
+import { SessionModule } from '../session/session.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { BusinessesModule } from '../businesses/businesses.module';
     ConfigModule.forFeature(jwtConfig),
     JwtModule.registerAsync(jwtConfig.asProvider()),
     BusinessesModule,
+    SessionModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtProviders],

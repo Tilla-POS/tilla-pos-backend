@@ -6,6 +6,7 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signup.dto';
@@ -17,6 +18,9 @@ import { AuthCreateBusinessDto } from './dto/create-business.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { LogoutDto } from './dto/logout.dto';
+import { AccessTokenGuard } from './guards/access-token/access-token.guard';
+import { OtpVerifyDto } from './dto/otp-verify.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -53,7 +57,7 @@ export class AuthController {
   createBusiness(
     @Body() authCreateBusinessDto: AuthCreateBusinessDto,
     @UploadedFile() file: Express.Multer.File,
-  ): Promise<AuthResponseDto> {
+  ) {
     return this.authService.createBusiness(authCreateBusinessDto, file);
   }
 
@@ -93,5 +97,34 @@ export class AuthController {
     @Body() refreshTokenDto: RefreshTokenDto,
   ): Promise<AuthResponseDto> {
     return this.authService.refreshToken(refreshTokenDto);
+  }
+
+  @Post('otp-verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify OTP for user',
+    description: 'This endpoint allows you to verify the OTP sent to a user.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP verified successfully.',
+  })
+  otpVerify(@Body() otpVerifyDto: OtpVerifyDto): Promise<AuthResponseDto> {
+    return this.authService.otpVerify(otpVerifyDto);
+  }
+
+  @Post('logout')
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Logout user',
+    description: 'Revoke the current session and logout the user.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Logged out successfully.',
+  })
+  logout(@Body() logoutDto: LogoutDto) {
+    return this.authService.logout(logoutDto);
   }
 }

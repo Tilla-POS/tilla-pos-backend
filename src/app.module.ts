@@ -21,6 +21,7 @@ import { ModifierModule } from './modifier/modifier.module';
 import { CategoryModule } from './category/category.module';
 import { ItemsModule } from './items/items.module';
 import { SaleModule } from './sale/sale.module';
+import { SessionModule } from './session/session.module';
 
 // Get the current NODE_ENV
 const ENV = process.env.NODE_ENV;
@@ -58,6 +59,7 @@ const ENV = process.env.NODE_ENV;
     CategoryModule,
     ItemsModule,
     SaleModule,
+    SessionModule,
   ],
   controllers: [AppController],
   providers: [
