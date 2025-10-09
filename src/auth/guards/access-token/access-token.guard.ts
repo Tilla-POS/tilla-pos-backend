@@ -7,10 +7,14 @@ import {
 import { JwtProviders } from '../../providers/jwt.providers';
 import { Request } from 'express';
 import { REQUEST_USER_KEY } from '../../constants/auth.constant';
+import { SessionService } from 'src/session/session.service';
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
-  constructor(private readonly jwtProvider: JwtProviders) {}
+  constructor(
+    private readonly jwtProvider: JwtProviders,
+    private readonly sessionService: SessionService,
+  ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Extract the request from the execution context
     const request = context.switchToHttp().getRequest();
@@ -20,7 +24,20 @@ export class AccessTokenGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     try {
-      request[REQUEST_USER_KEY] = await this.jwtProvider.verify(token);
+      const payload = await this.jwtProvider.verify(token);
+      const session = await this.sessionService.getSessionById(
+        payload.sessionId,
+      );
+
+      // payload must include sessionId and jti
+      if (
+        !session ||
+        session.revokedAt ||
+        session.refreshTokenJti !== payload.jti
+      ) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      request[REQUEST_USER_KEY] = payload;
     } catch {
       throw new UnauthorizedException();
     }

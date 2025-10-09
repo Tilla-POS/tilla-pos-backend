@@ -4,11 +4,14 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Business } from '../../businesses/entities/business.entity';
+import { Session } from '../../session/entities/session.entity';
+import { Device } from '../../session/entities/device.entity';
 
 @Entity('users')
 export class User {
@@ -34,6 +37,12 @@ export class User {
     unique: true,
   })
   email: string;
+  // OneToMany relation with sessions
+  @OneToMany(() => Session, (session) => session.user)
+  sessions: Session[];
+  // OneToMany relation with devices
+  @OneToMany(() => Device, (device) => device.user)
+  devices: Device[];
   @Column({
     type: 'varchar',
     length: 255,
