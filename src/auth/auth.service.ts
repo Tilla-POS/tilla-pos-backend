@@ -106,7 +106,7 @@ export class AuthService {
   async otpVerify(otpVerifyDto: OtpVerifyDto): Promise<AuthResponseDto> {
     if (otpVerifyDto.code === '123456') {
       // If OTP is correct, proceed with generating tokens
-      const user = await this.usersService.findOne(otpVerifyDto.userId);
+      const user = await this.usersService.findByEmail(otpVerifyDto.email);
       if (!user) {
         throw new UnauthorizedException('User not found');
       }

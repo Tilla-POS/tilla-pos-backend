@@ -18,6 +18,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { AuthType } from 'src/auth/enums/auth-type.enum';
 
 @ApiTags('Business Types')
 @ApiBearerAuth('Bearer')
@@ -49,6 +51,22 @@ export class BusinessTypesController {
   })
   findAll() {
     return this.businessTypesService.findAll();
+  }
+
+  @Get('options')
+  @ApiOperation({
+    summary: 'Retrieve business type options',
+    description:
+      'This endpoint returns a list of business types formatted as options.',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'A list of business type options has been successfully retrieved.',
+  })
+  @Auth(AuthType.None)
+  findOptions() {
+    return this.businessTypesService.findOptions();
   }
 
   @Get(':id')

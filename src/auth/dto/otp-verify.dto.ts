@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsEmail, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { CreateDeviceDto } from 'src/session/dto/create-device.dto';
 import { CreateLocationDto } from 'src/session/dto/create-location.dto';
 
@@ -9,9 +9,9 @@ export class OtpVerifyDto {
   @IsString()
   code: string;
 
-  @ApiProperty({ description: 'The user ID associated with the OTP' })
-  @IsString()
-  userId: string;
+  @ApiProperty({ description: 'The user email associated with the OTP' })
+  @IsEmail()
+  email: string;
 
   @ApiProperty({ required: false, type: () => CreateDeviceDto })
   @IsOptional()

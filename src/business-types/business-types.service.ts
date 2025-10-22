@@ -65,6 +65,24 @@ export class BusinessTypesService {
     }
   }
 
+  async findOptions() {
+    try {
+      const businessTypes = await this.businessTypeRepository.find();
+      return businessTypes.map((type) => ({
+        label: type.name,
+        value: type.id,
+      }));
+    } catch (error) {
+      throw new RequestTimeoutException(
+        'Error fetching business type options',
+        {
+          cause: error,
+          description: 'Could not fetch the business type options',
+        },
+      );
+    }
+  }
+
   async update(id: string, updateBusinessTypeDto: UpdateBusinessTypeDto) {
     let businessType: BusinessType;
     try {
