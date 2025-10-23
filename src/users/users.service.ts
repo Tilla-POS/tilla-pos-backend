@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   RequestTimeoutException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -13,6 +14,8 @@ import { ActiveUser as ActiveUserInterface } from '../auth/interfaces/active-use
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     /**
      * Inject User Repository
@@ -83,6 +86,7 @@ export class UsersService {
 
   async getCurrentUser(activeUser: ActiveUserInterface): Promise<User> {
     try {
+      this.logger.log(`Retrieving current user with ID: ${activeUser.sub}`);
       const user = await this.userRepository.findOne({
         where: { id: activeUser.sub },
         relations: ['business'],

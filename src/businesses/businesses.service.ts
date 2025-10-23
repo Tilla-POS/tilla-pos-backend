@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   RequestTimeoutException,
 } from '@nestjs/common';
 import { CreateBusinessDto } from './dto/create-business.dto';
@@ -16,6 +17,7 @@ import { BusinessTypesService } from '../business-types/business-types.service';
 
 @Injectable()
 export class BusinessesService {
+  private readonly logger = new Logger(BusinessesService.name);
   constructor(
     @InjectRepository(Business)
     private readonly businessRepository: Repository<Business>,
@@ -89,6 +91,7 @@ export class BusinessesService {
 
   async findOne(id: string) {
     // if (!id) throw new BadRequestException(`Invalid business id`);
+    this.logger.log(`Fetching business with ID: ${id}`);
     try {
       return await this.businessRepository.findOne({
         where: { id },

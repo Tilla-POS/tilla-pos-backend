@@ -71,6 +71,25 @@ export class BusinessesController {
     return this.businessesService.findAll();
   }
 
+  @Get('me')
+  @ApiOperation({
+    summary: 'Retrieve the business of the active user',
+    description:
+      'This endpoint returns the business associated with the currently authenticated user.',
+  })
+  @ApiOkResponse({
+    description: 'Business of the active user retrieved successfully.',
+  })
+  findMyBusiness(
+    @ActiveUser(
+      'businessId',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    businessId: string,
+  ) {
+    return this.businessesService.findOne(businessId);
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Retrieve a business by ID',
