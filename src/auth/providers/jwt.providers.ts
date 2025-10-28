@@ -1,10 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigType } from '@nestjs/config';
 import jwtConfig from '../config/jwt.config';
 
 @Injectable()
 export class JwtProviders {
+  private readonly logger = new Logger(JwtProviders.name);
   constructor(
     private readonly jwtService: JwtService,
     @Inject(jwtConfig.KEY)
@@ -15,6 +16,7 @@ export class JwtProviders {
     try {
       return await this.jwtService.verifyAsync(token, this.jwtConfiguration);
     } catch (error) {
+      this.logger.error(error);
       throw new Error('Invalid token');
     }
   }
@@ -64,6 +66,7 @@ export class JwtProviders {
 
       return payload;
     } catch (error) {
+      this.logger.error(error);
       throw new Error('Invalid refresh token');
     }
   }

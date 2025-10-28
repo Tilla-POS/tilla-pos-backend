@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Session } from './session.entity';
+import { Location } from './location.entity';
 
 @Entity('devices')
 export class Device {
@@ -35,7 +36,7 @@ export class Device {
   @Column({ name: 'model', nullable: true })
   model?: string;
 
-  @Column({ name: 'device_id', nullable: true })
+  @Column({ name: 'device_id', unique: true, nullable: true })
   deviceId?: string;
 
   @Column({ name: 'app_version', nullable: true })
@@ -61,6 +62,9 @@ export class Device {
 
   @OneToMany(() => Session, (s) => s.device)
   sessions?: Session[];
+
+  @OneToMany(() => Location, (location) => location.device)
+  locations?: Location[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

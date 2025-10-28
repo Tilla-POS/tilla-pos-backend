@@ -10,7 +10,6 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Device } from './device.entity';
-import { Location } from './location.entity';
 
 @Entity('sessions')
 export class Session {
@@ -28,10 +27,6 @@ export class Session {
   @JoinColumn({ name: 'device_id' })
   device?: Device;
 
-  @ManyToOne(() => Location, { nullable: true, cascade: ['insert'] })
-  @JoinColumn({ name: 'location_id' })
-  location?: Location;
-
   @Column({ name: 'refresh_token_jti', nullable: true })
   @Index()
   refreshTokenJti?: string;
@@ -43,7 +38,7 @@ export class Session {
   lastSeenAt?: Date;
 
   @Column({ name: 'revoked_at', type: 'timestamp', nullable: true })
-  revokedAt?: Date;
+  revokedAt?: Date | null;
 
   @Column({ name: 'compromised', default: false })
   compromised: boolean;

@@ -3,12 +3,22 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Device } from './device.entity';
 
 @Entity('locations')
 export class Location {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @ManyToOne(() => Device, (device) => device.locations, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'device_id' })
+  device: Device;
 
   @Column({ name: 'country', nullable: true })
   country?: string;

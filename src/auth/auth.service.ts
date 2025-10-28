@@ -40,7 +40,9 @@ export class AuthService {
     return business;
   }
 
-  async signin(signinDto: SignInDto): Promise<AuthResponseDto> {
+  async signin(
+    signinDto: SignInDto,
+  ): Promise<AuthResponseDto | { needsOtp: boolean }> {
     this.logger.log('Signing in user with email:', signinDto.email);
     const user = await this.usersService.findByEmail(signinDto.email);
     if (!user) {
@@ -53,12 +55,52 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const { session, refreshJti, accessJti } =
-      await this.sessionService.createSession(
+
+    /**
+     * Check if the device already exists for this user
+     * If it does, revalidate the existing session instead of creating a new one
+     */
+    const existingSession = await this.sessionService.findActiveSessionByDevice(
+      user.id,
+      signinDto.device.deviceId,
+    );
+
+    let session: any;
+    let refreshJti: string;
+    let accessJti: string;
+    if (existingSession) {
+      // Revalidate existing session
+      this.logger.log(
+        `Revalidating existing session ${existingSession.id} for device ${signinDto.device.deviceId}`,
+      );
+      const revalidated = await this.sessionService.revalidateSession(
+        existingSession.id,
+        signinDto.location,
+      );
+      session = revalidated.session;
+      refreshJti = revalidated.refreshJti;
+      accessJti = revalidated.accessJti;
+    } else {
+      // Check if device exists in the system (for any user)
+      const isDeviceKnown = await this.sessionService.checkIsDeviceExists(
+        signinDto.device.deviceId,
+      );
+      if (!isDeviceKnown) {
+        // New device - send OTP for verification
+        this.logger.log('New device detected. Sending OTP to user.');
+        return { needsOtp: true };
+      }
+
+      // Device exists but not for this user - create new session
+      const created = await this.sessionService.createSession(
         user.id,
         signinDto.device,
         signinDto.location,
       );
+      session = created.session;
+      refreshJti = created.refreshJti;
+      accessJti = created.accessJti;
+    }
 
     return await this.jwtProvider.generateTokens(user.id, {
       email: user.email,

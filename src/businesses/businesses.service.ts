@@ -74,7 +74,7 @@ export class BusinessesService {
     try {
       return await this.businessRepository.save(newBusiness);
     } catch (e) {
-      console.log(e);
+      this.logger.error('Error creating business', e);
       throw new RequestTimeoutException('Failed to create the business', e);
     }
   }

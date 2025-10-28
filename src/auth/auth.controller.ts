@@ -73,7 +73,9 @@ export class AuthController {
     description: 'The user has been successfully signed in.',
     type: AuthResponseDto,
   })
-  signIn(@Body() signInDto: SignInDto): Promise<AuthResponseDto> {
+  signIn(
+    @Body() signInDto: SignInDto,
+  ): Promise<AuthResponseDto | { needsOtp: boolean }> {
     return this.authService.signin(signInDto);
   }
 
